@@ -1,0 +1,12 @@
+---
+description: About/team is a future standalone page, not on the homepage
+alwaysApply: true
+---
+
+# About page (later)
+
+The AutoAny **about / team** block (`Kollektiva`, `#about`, `#team`, TiltCards) is **hidden from the homepage on purpose**.
+
+- Do not put it back on `src/pages/Index.tsx` unless the user asks.
+- Keep `src/components/Kollektiva.tsx` (and related TiltCard / Kollektiva.css assets). We will wire a **separate about page** later.
+- When that page is requested, reuse Kollektiva rather than rebuilding from scratch.

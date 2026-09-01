@@ -1,12 +1,38 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" data-theme="light">
   <head>
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>michael-smith-portfolio</title>
+    <meta name="color-scheme" content="light dark" />
+    <title>AutoAny | Automate Everything. Achieve Anything.</title>
+    <script>
+      (function () {
+        try {
+          var stored = localStorage.getItem("autoany-theme");
+          var theme = stored === "dark" || stored === "light" ? stored : "light";
+          document.documentElement.setAttribute("data-theme", theme);
+          document.documentElement.style.colorScheme = theme;
+        } catch (e) {
+          document.documentElement.setAttribute("data-theme", "light");
+        }
+      })();
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Geist:wght@300;400;500&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=Inter+Tight:wght@600;700&display=swap"
+      rel="stylesheet"
+    />
   </head>
   <body>
+    <!--
+      THESIS: A screening-room portfolio — the picture leads; chrome recedes to a floating pill.
+      OWN-WORLD: Near-black HSL void, steel wash #89AACC→#4E85BF, Inter UI + Instrument Serif italic display.
+      STORY: Watch the work, then reach out.
+      FIRST VIEWPORT: HLS full-bleed, name at display scale, pill nav top-center, See Works / Reach out.
+      FORM: User-pinned recreation brief. FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
+    -->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -1,0 +1,63 @@
+/* Team sheet: quiet light surface, Unlumen TiltCards. */
+.team-sheet.nk-sheet {
+  overflow: visible;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 100svh;
+  padding: 3rem 1.25rem;
+  background: #f4f4f2;
+  color: #111;
+  isolation: isolate;
+}
+
+.team-sheet-grid {
+  position: relative;
+  z-index: 10;
+  display: grid;
+  width: 100%;
+  max-width: 68rem;
+  margin-inline: auto;
+  grid-template-columns: 1fr;
+  gap: 1.5rem;
+  overflow: visible;
+}
+
+.team-sheet-grid > * {
+  min-width: 0;
+}
+
+.team-sheet-grid > * > * {
+  height: 16.5rem !important;
+}
+
+@media (min-width: 640px) {
+  .team-sheet.nk-sheet {
+    padding: 3.5rem 2rem;
+  }
+
+  .team-sheet-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 1.75rem;
+    max-width: 72rem;
+  }
+
+  .team-sheet-grid > * > * {
+    height: 17.5rem !important;
+  }
+}
+
+@media (min-width: 1024px) {
+  .team-sheet.nk-sheet {
+    padding: 4rem 2.5rem;
+  }
+
+  .team-sheet-grid {
+    gap: 2rem;
+    max-width: 76rem;
+  }
+
+  .team-sheet-grid > * > * {
+    height: 18.5rem !important;
+  }
+}

@@ -1,0 +1,28 @@
+.flow-card {
+  opacity: 0;
+  transform: translate3d(5rem, 0, 0);
+  filter: blur(8px);
+  will-change: transform, opacity, filter;
+  transition:
+    transform 780ms cubic-bezier(0.16, 1, 0.3, 1),
+    opacity 640ms cubic-bezier(0.16, 1, 0.3, 1),
+    filter 640ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.flow-card.is-in {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  filter: blur(0);
+  will-change: auto;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .flow-card,
+  .flow-card.is-in {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition: none;
+    will-change: auto;
+  }
+}

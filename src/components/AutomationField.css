@@ -1,0 +1,214 @@
+.automation-field {
+  position: absolute;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  color: hsl(210 10% 76%);
+}
+
+[data-theme="dark"] .automation-field {
+  color: hsl(210 12% 86%);
+}
+
+.automation-field-wash {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse 58% 46% at 12% 16%, hsl(215 12% 30% / 0.42), transparent 62%),
+    radial-gradient(ellipse 52% 44% at 88% 84%, hsl(215 10% 26% / 0.32), transparent 64%),
+    hsl(var(--bg));
+}
+
+.automation-field-grid {
+  position: absolute;
+  inset: -8%;
+  background-image: radial-gradient(circle, currentColor 1.05px, transparent 1.2px);
+  background-size: 20px 20px;
+  opacity: 0.2;
+}
+
+.automation-field-svg {
+  position: absolute;
+  inset: -2% -4%;
+  width: 108%;
+  height: 104%;
+  display: block;
+}
+
+.automation-field-vignette {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(
+      ellipse 88% 80% at 50% 50%,
+      transparent 0%,
+      transparent 56%,
+      hsl(var(--bg) / 0.22) 100%
+    );
+}
+
+.automation-pipe {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.4;
+  vector-effect: non-scaling-stroke;
+}
+
+.automation-pipe--flow {
+  opacity: 0.86;
+  stroke-width: 1.7;
+  stroke-dasharray: 8 78;
+}
+
+.automation-pipe--a {
+  animation: automation-flow 16s linear infinite;
+}
+
+.automation-pipe--b {
+  animation: automation-flow 21s linear infinite reverse;
+  animation-delay: -6s;
+}
+
+.automation-pipe--c {
+  animation: automation-flow 18s linear infinite;
+  animation-delay: -11s;
+}
+
+.automation-node {
+  fill: hsl(var(--raised) / 0.94);
+  stroke: currentColor;
+  stroke-width: 1.15;
+  opacity: 0.92;
+  vector-effect: non-scaling-stroke;
+}
+
+.automation-node-rail {
+  fill: hsl(var(--accent));
+  opacity: 0.88;
+}
+
+.automation-node-sheen {
+  fill: hsl(var(--text) / 0.14);
+}
+
+.automation-node-label {
+  fill: hsl(var(--text) / 0.82);
+  font-family: var(--font-body);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: -0.02em;
+}
+
+.automation-mark {
+  fill: currentColor;
+  opacity: 0.55;
+}
+
+.automation-port {
+  fill: hsl(var(--bg));
+  stroke: currentColor;
+  stroke-width: 1.2;
+  opacity: 0.82;
+  vector-effect: non-scaling-stroke;
+}
+
+.automation-pip {
+  fill: hsl(var(--text));
+  opacity: 0.55;
+  animation: automation-live 2.8s ease-in-out infinite;
+}
+
+.automation-field.is-paused .automation-pipe--flow,
+.automation-field.is-paused .automation-pip {
+  animation-play-state: paused;
+}
+
+@keyframes automation-flow {
+  to {
+    stroke-dashoffset: -420;
+  }
+}
+
+@keyframes automation-live {
+  0%,
+  100% {
+    opacity: 0.35;
+  }
+  50% {
+    opacity: 0.9;
+  }
+}
+
+@media (max-width: 767px) {
+  .automation-field-grid {
+    opacity: 0.12;
+  }
+
+  .automation-pipe {
+    opacity: 0.28;
+  }
+
+  .automation-pipe--flow {
+    opacity: 0.55;
+  }
+
+  .automation-node-label {
+    fill: hsl(var(--text) / 0.7);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .automation-pipe--flow,
+  .automation-pip {
+    animation: none;
+  }
+
+  .automation-pipe--flow {
+    stroke-dasharray: none;
+    opacity: 0.4;
+  }
+}
+
+[data-theme="light"] .automation-field {
+  color: hsl(215 10% 38%);
+}
+
+[data-theme="light"] .automation-field-wash {
+  background:
+    radial-gradient(ellipse 58% 46% at 16% 18%, hsl(215 10% 72% / 0.28), transparent 62%),
+    radial-gradient(ellipse 52% 44% at 84% 82%, hsl(215 8% 68% / 0.2), transparent 64%),
+    hsl(var(--bg));
+}
+
+[data-theme="light"] .automation-field-grid {
+  opacity: 0.14;
+}
+
+[data-theme="light"] .automation-node {
+  fill: hsl(var(--surface));
+}
+
+[data-theme="light"] .automation-port {
+  fill: hsl(var(--surface));
+}
+
+[data-theme="light"] .automation-field-vignette {
+  background:
+    radial-gradient(
+      ellipse 88% 80% at 50% 50%,
+      transparent 0%,
+      transparent 56%,
+      hsl(var(--bg) / 0.18) 100%
+    );
+}
+
+[data-theme="light"] .automation-pipe {
+  opacity: 0.32;
+}
+
+[data-theme="light"] .automation-node-label {
+  fill: hsl(var(--text) / 0.72);
+}

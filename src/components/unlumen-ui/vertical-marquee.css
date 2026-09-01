@@ -1,0 +1,68 @@
+.nk-review-col {
+  min-width: 0;
+  width: 100%;
+  max-width: none;
+  flex: 1 1 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.nk-review-track {
+  display: flex;
+  flex-direction: column;
+  animation: nk-review-up 40s linear infinite;
+  animation-play-state: running;
+}
+
+.nk-review-track--reverse {
+  animation-name: nk-review-down;
+}
+
+.nk-review-track--paused {
+  animation-play-state: paused;
+}
+
+#reviews.is-paused-live .nk-review-track {
+  animation-play-state: paused;
+}
+
+#reviews [class*="from-bg"] {
+  --tw-gradient-from: #000 var(--tw-gradient-from-position);
+  --tw-gradient-to: transparent var(--tw-gradient-to-position);
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to);
+}
+
+@media (max-width: 767px) {
+  #reviews .nk-review-col {
+    max-width: min(100%, 22rem);
+    margin-inline: auto;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nk-review-track {
+    animation: nk-review-up 40s linear infinite;
+  }
+
+  .nk-review-track--reverse {
+    animation-name: nk-review-down;
+  }
+}
+
+@keyframes nk-review-up {
+  from {
+    transform: translate3d(0, 0, 0);
+  }
+  to {
+    transform: translate3d(0, -50%, 0);
+  }
+}
+
+@keyframes nk-review-down {
+  from {
+    transform: translate3d(0, -50%, 0);
+  }
+  to {
+    transform: translate3d(0, 0, 0);
+  }
+}

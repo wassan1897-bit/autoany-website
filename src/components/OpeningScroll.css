@@ -1,0 +1,67 @@
+.open-track {
+  position: relative;
+  /* Shortened scrub so the workflow section passes faster. */
+  height: 480vh;
+}
+
+.open-stage {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  height: 100svh;
+  overflow: hidden;
+  background: transparent;
+}
+
+.open-stage .nk-hero {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  height: 100%;
+  min-height: 0;
+}
+
+.open-stage .nk-hero .nk-stage {
+  transform-origin: 50% 46%;
+}
+
+.open-stage [data-open-out],
+.open-stage [data-open-in] {
+  display: block;
+}
+
+.open-stage .gate-pay-ghost {
+  display: inline-block;
+}
+
+.open-stage .gate-pay-fill {
+  display: block;
+}
+
+.open-stage .nk-actions,
+.open-stage .nk-pills {
+  display: flex;
+}
+
+.open-stage .gate-scene {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  background: transparent;
+  pointer-events: none;
+}
+
+.open-stage .gate-lock {
+  z-index: 3;
+}
+
+.open-stage .gate-wf {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.open-stage.is-wf .gate-wf {
+  opacity: 1;
+  visibility: visible;
+}

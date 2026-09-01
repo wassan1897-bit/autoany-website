@@ -22,3 +22,16 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# Local QA / browser audit artifacts
+.playwright-cli/
+qa-*.yml
+qa-*.png
+*-check.png
+resume-*.yml
+replaced-tools-check.png
+previews/
+
+# Agent tooling (not needed for deploy)
+.agents/
+skills-lock.json

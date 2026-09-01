@@ -1,0 +1,812 @@
+.iphone-cc {
+  --cc-blue: #0a84ff;
+  --cc-green: #30d158;
+  --cc-orange: #ff9f0a;
+  --cc-red: #ff453a;
+  --cc-purple: #5e5ce6;
+  --cc-sun: #ffd60a;
+  --cc-glass: rgba(255, 255, 255, 0.16);
+  --cc-glass-hi: rgba(255, 255, 255, 0.18);
+  --cc-knob: rgba(0, 0, 0, 0.28);
+  --cc-edge: rgba(255, 255, 255, 0.34);
+  --cc-gap: 13px;
+  --cc-sheet-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --cc-press: cubic-bezier(0.32, 0.72, 0, 1);
+  position: absolute;
+  inset: 0;
+  z-index: 24;
+  overflow: hidden;
+  font-family: Inter, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+  color: #fff;
+  -webkit-font-smoothing: antialiased;
+  -webkit-user-select: none;
+  user-select: none;
+  touch-action: none;
+  transform-origin: 82% 0%;
+  will-change: transform, opacity;
+  background: rgba(12, 12, 16, 0.08);
+  -webkit-backdrop-filter: blur(36px) saturate(160%);
+  backdrop-filter: blur(36px) saturate(160%);
+  transition:
+    transform 420ms var(--cc-sheet-ease),
+    opacity 280ms var(--cc-sheet-ease);
+}
+
+.iphone-cc.is-reduced,
+.iphone-cc.is-dragging {
+  transition: none;
+}
+
+.iphone-cc-scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.28);
+  pointer-events: none;
+  -webkit-backdrop-filter: blur(44px) saturate(160%);
+  backdrop-filter: blur(44px) saturate(160%);
+}
+
+.iphone-cc-sheet {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  height: 100%;
+  flex-direction: column;
+  padding: 12px 22px 34px;
+}
+
+.iphone-cc-header {
+  display: flex;
+  height: 36px;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 18px;
+  padding: 0 2px;
+}
+
+.iphone-cc-time,
+.iphone-cc-module,
+.iphone-cc-toggle,
+.iphone-cc-circle,
+.iphone-cc-focus,
+.iphone-cc-slider {
+  position: relative;
+  isolation: isolate;
+  background: var(--cc-glass);
+  background-blend-mode: luminosity;
+  box-shadow:
+    inset 0 0.7px 0 rgba(255, 255, 255, 0.32),
+    inset 0 -0.4px 0 rgba(0, 0, 0, 0.18),
+    0 0 0 0.5px var(--cc-edge);
+  -webkit-backdrop-filter: blur(28px) saturate(190%);
+  backdrop-filter: blur(28px) saturate(190%);
+}
+
+.iphone-cc-time,
+.iphone-cc-module,
+.iphone-cc-slider {
+  overflow: hidden;
+}
+
+.iphone-cc-time::before,
+.iphone-cc-module::before,
+.iphone-cc-toggle::before,
+.iphone-cc-circle::before,
+.iphone-cc-focus::before,
+.iphone-cc-slider::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  padding: 0.7px;
+  background: linear-gradient(
+    165deg,
+    rgba(255, 255, 255, 0.48) 0%,
+    rgba(255, 255, 255, 0.16) 22%,
+    rgba(255, 255, 255, 0) 46%,
+    rgba(255, 255, 255, 0.08) 74%,
+    rgba(255, 255, 255, 0.3) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+.iphone-cc-time,
+.iphone-cc-meta {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 32px;
+  color: #fff;
+}
+
+.iphone-cc-time {
+  min-width: 72px;
+  height: 32px;
+  padding: 0 12px 1px;
+  border-radius: 999px;
+  font-family: "Inter Tight", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  pointer-events: none;
+}
+
+.iphone-cc-meta {
+  gap: 6px;
+  min-width: 0;
+  cursor: default;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  font-variant-numeric: tabular-nums;
+  pointer-events: none;
+}
+
+.iphone-cc-battery {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.iphone-cc-battery-body {
+  position: relative;
+  box-sizing: border-box;
+  width: 27px;
+  height: 12.5px;
+  overflow: hidden;
+  padding: 1.4px;
+  border: 1.15px solid rgba(255, 255, 255, 0.92);
+  border-radius: 3.4px;
+}
+
+.iphone-cc-battery-fill {
+  display: block;
+  height: 100%;
+  border-radius: 1.4px;
+  background: #30d158;
+}
+
+.iphone-cc-battery-nub {
+  width: 1.6px;
+  height: 5px;
+  border-radius: 0 1px 1px 0;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.iphone-cc-board {
+  display: grid;
+  flex: 0 0 auto;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto auto;
+  gap: var(--cc-gap);
+}
+
+.iphone-cc-connectivity,
+.iphone-cc-music,
+.iphone-cc-utils,
+.iphone-cc-sliders {
+  aspect-ratio: 1;
+  min-width: 0;
+  min-height: 0;
+}
+
+.iphone-cc-module {
+  display: grid;
+  border-radius: 36px;
+}
+
+@supports (corner-shape: squircle) {
+  .iphone-cc-module {
+    corner-shape: squircle;
+  }
+}
+
+.iphone-cc-connectivity {
+  grid-column: 1;
+  grid-row: 1;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: 11px;
+  padding: 14px;
+}
+
+.iphone-cc-music {
+  grid-column: 2;
+  grid-row: 1;
+  display: flex;
+  flex-direction: column;
+  padding: 14px 12px 8px;
+}
+
+.iphone-cc-utils {
+  grid-column: 1;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  gap: var(--cc-gap);
+}
+
+.iphone-cc-sliders {
+  grid-column: 2;
+  grid-row: 2;
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--cc-gap);
+}
+
+.iphone-cc-dock {
+  grid-column: 1 / -1;
+  grid-row: 3;
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 10px;
+  margin-top: 1px;
+}
+
+.iphone-cc-toggle,
+.iphone-cc-circle,
+.iphone-cc-focus,
+.iphone-cc-transport,
+.iphone-np-btn {
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.iphone-cc-toggle,
+.iphone-cc-circle,
+.iphone-cc-focus,
+.iphone-cc-transport,
+.iphone-np-btn {
+  transition:
+    background-color 180ms var(--cc-press),
+    color 180ms var(--cc-press),
+    transform 200ms var(--cc-press),
+    filter 180ms var(--cc-press),
+    box-shadow 180ms var(--cc-press);
+}
+
+.iphone-cc-toggle,
+.iphone-cc-circle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: #fff;
+}
+
+.iphone-cc-toggle,
+.iphone-cc-circle,
+.iphone-cc-focus,
+.iphone-cc-transport {
+  position: relative;
+  z-index: 1;
+}
+
+.iphone-cc-toggle > svg,
+.iphone-cc-circle > svg,
+.iphone-cc-focus > svg {
+  position: relative;
+  z-index: 1;
+}
+
+.iphone-cc-toggle {
+  background: var(--cc-knob);
+}
+
+.iphone-cc-circle {
+  aspect-ratio: 1;
+  background: var(--cc-glass-hi);
+}
+
+.iphone-cc-toggle:hover,
+.iphone-cc-circle:hover,
+.iphone-cc-focus:hover {
+  filter: brightness(1.12);
+}
+
+.iphone-cc-toggle:active,
+.iphone-cc-circle:active,
+.iphone-cc-focus:active,
+.iphone-cc-transport:active,
+.iphone-np-btn:active {
+  transform: scale(0.96);
+  filter: brightness(1.18);
+}
+
+.iphone-cc-toggle.is-on,
+.iphone-cc-circle.is-on--red,
+.iphone-cc-circle.is-on--orange,
+.iphone-cc-circle.is-on--white,
+.iphone-cc-focus.is-on {
+  background-blend-mode: normal;
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+.iphone-cc-toggle.is-on::before,
+.iphone-cc-circle.is-on--red::before,
+.iphone-cc-circle.is-on--orange::before,
+.iphone-cc-circle.is-on--white::before,
+.iphone-cc-focus.is-on::before {
+  opacity: 0.28;
+}
+
+.iphone-cc-toggle.is-on {
+  box-shadow:
+    inset 0 0.5px 0 rgba(255, 255, 255, 0.45),
+    0 6px 16px rgba(0, 0, 0, 0.18);
+}
+
+.iphone-cc-toggle.is-on--orange {
+  background: var(--cc-orange);
+}
+
+.iphone-cc-toggle.is-on--green {
+  background: var(--cc-green);
+}
+
+.iphone-cc-toggle.is-on--blue {
+  background: var(--cc-blue);
+}
+
+.iphone-cc-circle.is-on--red {
+  background: var(--cc-red);
+}
+
+.iphone-cc-circle.is-on--orange {
+  background: var(--cc-orange);
+}
+
+.iphone-cc-circle.is-on--white {
+  background: #f2f2f7;
+  color: #1c1c1e;
+  box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.8);
+}
+
+.iphone-cc-focus {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 0 14px;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 590;
+  letter-spacing: -0.022em;
+}
+
+.iphone-cc-focus.is-on {
+  background: var(--cc-purple);
+  box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.35);
+}
+
+.iphone-cc-focus-label {
+  position: relative;
+  z-index: 1;
+  line-height: 1;
+}
+
+.iphone-cc-slider {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 999px;
+  color: #fff;
+  cursor: pointer;
+  touch-action: none;
+}
+
+.iphone-cc-slider-fill {
+  position: absolute;
+  right: 0;
+  bottom: 0;
+  left: 0;
+  z-index: 0;
+  background: #fff;
+  border-radius: inherit;
+  pointer-events: none;
+}
+
+.iphone-cc-slider--volume .iphone-cc-slider-fill {
+  background: linear-gradient(180deg, #ff8a80 0%, #ff3b30 72%, #e0352b 100%);
+}
+
+.iphone-cc-slider-icon {
+  position: absolute;
+  top: auto;
+  bottom: 14px;
+  left: 50%;
+  z-index: 1;
+  display: flex;
+  color: #1c1c1e;
+  pointer-events: none;
+  transform: translateX(-50%);
+}
+
+.iphone-cc-slider-icon.is-dim {
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.iphone-cc-slider--volume .iphone-cc-slider-icon:not(.is-dim) {
+  color: #fff;
+}
+
+.iphone-cc-music-top {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+}
+
+.iphone-cc-music-idle {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  align-items: center;
+  justify-content: center;
+  padding: 0 8px;
+  font-size: 15px;
+  font-weight: 590;
+  letter-spacing: -0.02em;
+  color: rgba(255, 255, 255, 0.92);
+}
+
+.iphone-cc-music-now {
+  display: flex;
+  flex: 1;
+  min-width: 0;
+  align-items: center;
+  gap: 10px;
+}
+
+.iphone-cc-music-art {
+  width: 48px;
+  height: 48px;
+  flex-shrink: 0;
+  overflow: hidden;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow:
+    0 8px 18px rgba(0, 0, 0, 0.32),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.18);
+}
+
+.iphone-cc-music-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iphone-cc-music-copy {
+  min-width: 0;
+}
+
+.iphone-cc-music-title,
+.iphone-cc-music-artist {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iphone-cc-music-title {
+  font-size: 14px;
+  font-weight: 680;
+  letter-spacing: -0.024em;
+  line-height: 1.15;
+}
+
+.iphone-cc-music-artist {
+  margin-top: 3px;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.62);
+}
+
+.iphone-cc-airplay {
+  display: flex;
+  flex-shrink: 0;
+  width: 28px;
+  height: 28px;
+  align-items: center;
+  justify-content: center;
+  color: rgba(255, 255, 255, 0.72);
+}
+
+.iphone-cc-music-controls {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 4px 2px 2px;
+}
+
+.iphone-cc-music-progress {
+  position: relative;
+  height: 3px;
+  margin: 2px 8px 6px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.iphone-cc-music-progress-fill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #fff;
+}
+
+.iphone-cc-transport {
+  display: flex;
+  width: 44px;
+  height: 44px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  color: #fff;
+  background: transparent;
+}
+
+.iphone-cc-transport--play {
+  width: 48px;
+}
+
+.iphone-cc-dock-btn {
+  width: 100%;
+  height: auto;
+  min-width: 44px;
+  min-height: 44px;
+}
+
+.iphone-cc-flash-dot {
+  fill: #1c1c1e;
+}
+
+.iphone-cc-circle.is-on--white .iphone-cc-flash-dot {
+  fill: #f2f2f7;
+}
+
+.iphone-cc-toggle:focus-visible,
+.iphone-cc-circle:focus-visible,
+.iphone-cc-focus:focus-visible,
+.iphone-cc-slider:focus-visible,
+.iphone-cc-transport:focus-visible,
+.iphone-np-btn:focus-visible {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+}
+
+/* Lock-screen Now Playing */
+.iphone-np {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  padding: 12px 14px 12px;
+  border-radius: 26px;
+  background: rgba(40, 40, 44, 0.5);
+  box-shadow:
+    inset 0 0.6px 0 rgba(255, 255, 255, 0.26),
+    inset 0 0 0 0.5px rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  backdrop-filter: blur(28px) saturate(160%);
+  color: #fff;
+  font-family: Inter, ui-rounded, ui-sans-serif, system-ui, sans-serif;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.iphone-np--expanded {
+  padding: 16px 16px 18px;
+  border-radius: 32px;
+  background: rgba(44, 44, 46, 0.78);
+}
+
+.iphone-np-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.iphone-np-art {
+  position: relative;
+  flex-shrink: 0;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.35);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.28);
+}
+
+.iphone-np-art::after {
+  content: "";
+  position: absolute;
+  right: 5px;
+  bottom: 5px;
+  width: 15px;
+  height: 15px;
+  border-radius: 50%;
+  background: #1ed760;
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.35);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23000'%3E%3Cpath d='M12 1.6A10.4 10.4 0 1 0 22.4 12 10.4 10.4 0 0 0 12 1.6Zm4.76 15-1.1.33a.3.3 0 0 1-.38-.2 8.4 8.4 0 0 0-7.1-5.3.3.3 0 0 1-.3-.3v-1.1a.3.3 0 0 1 .32-.3 10 10 0 0 1 8.76 6.5.3.3 0 0 1-.2.37Zm1.27-2.84-1.23.37a.36.36 0 0 1-.45-.24 10.4 10.4 0 0 0-8.72-6.5.36.36 0 0 1-.35-.36V5.9a.36.36 0 0 1 .38-.36 12.2 12.2 0 0 1 10.7 8 .36.36 0 0 1-.33.42Z'/%3E%3C/svg%3E");
+  background-size: 11px;
+  background-repeat: no-repeat;
+  background-position: center;
+}
+
+.iphone-np:not(.iphone-np--expanded) .iphone-np-art {
+  width: 52px;
+  height: 52px;
+  border-radius: 12px;
+}
+
+.iphone-np--expanded .iphone-np-art {
+  width: 100%;
+  aspect-ratio: 1;
+  margin-bottom: 16px;
+  border-radius: 18px;
+}
+
+.iphone-np-art img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.iphone-np-copy {
+  min-width: 0;
+  flex: 1;
+}
+
+.iphone-np-title {
+  overflow: hidden;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: -0.024em;
+  line-height: 1.15;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iphone-np--expanded .iphone-np-title {
+  font-size: 22px;
+  letter-spacing: -0.03em;
+}
+
+.iphone-np-artist {
+  overflow: hidden;
+  margin-top: 2px;
+  font-size: 13px;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: rgba(255, 255, 255, 0.62);
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.iphone-np--expanded .iphone-np-artist {
+  margin-top: 4px;
+  font-size: 15px;
+}
+
+.iphone-np-controls {
+  display: flex;
+  flex-shrink: 0;
+  align-items: center;
+  gap: 2px;
+}
+
+.iphone-np--expanded .iphone-np-controls {
+  justify-content: center;
+  gap: 28px;
+  margin-top: 8px;
+}
+
+.iphone-np-btn {
+  display: flex;
+  width: 40px;
+  height: 40px;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  color: #fff;
+  background: transparent;
+}
+
+.iphone-np--expanded .iphone-np-btn {
+  width: 48px;
+  height: 48px;
+}
+
+.iphone-np-progress {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  margin-top: 10px;
+}
+
+.iphone-np--expanded .iphone-np-progress {
+  margin-top: 18px;
+}
+
+.iphone-np-track {
+  position: relative;
+  height: 4px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.22);
+}
+
+.iphone-np--expanded .iphone-np-track {
+  height: 5px;
+}
+
+.iphone-np-track-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: #fff;
+}
+
+.iphone-np-thumb {
+  position: absolute;
+  top: 50%;
+  width: 11px;
+  height: 11px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.28);
+  transform: translate(-50%, -50%);
+  pointer-events: none;
+}
+
+.iphone-np-time {
+  align-self: flex-end;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  color: rgba(255, 255, 255, 0.55);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iphone-cc,
+  .iphone-cc-toggle,
+  .iphone-cc-circle,
+  .iphone-cc-focus,
+  .iphone-cc-transport,
+  .iphone-np-btn,
+  .iphone-cc-toggle:active,
+  .iphone-cc-circle:active,
+  .iphone-cc-focus:active,
+  .iphone-cc-transport:active,
+  .iphone-np-btn:active {
+    transition: none;
+    transform: none;
+  }
+}

@@ -1,0 +1,537 @@
+.iphone-device {
+  --island-w: 125px;
+  --island-h: 36px;
+  --island-top: 12px;
+  --island-gap: 8px;
+  position: relative;
+  overflow: clip;
+  isolation: isolate;
+  width: 415px;
+  height: 874px;
+  border-radius: 66px;
+  background:
+    linear-gradient(
+      180deg,
+      rgba(255, 255, 255, 0.38) 0%,
+      transparent 8%,
+      transparent 92%,
+      rgba(0, 0, 0, 0.28) 100%
+    ),
+    linear-gradient(
+      90deg,
+      #7d7d84 0%,
+      #c9c9d0 8%,
+      #a8a8af 18%,
+      #e4e4ea 40%,
+      #b4b4bb 62%,
+      #8e8e96 84%,
+      #d8d8de 93%,
+      #9a9aa2 100%
+    );
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.7),
+    inset 0 -1px 1px rgba(0, 0, 0, 0.34),
+    0 22px 56px rgba(0, 0, 0, 0.38),
+    0 2px 8px rgba(0, 0, 0, 0.26);
+}
+
+.iphone-bezel {
+  position: absolute;
+  inset: 11px;
+  overflow: clip;
+  isolation: isolate;
+  border-radius: 55px;
+  background: #050506;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  transform: translateZ(0);
+}
+
+.iphone-screen {
+  position: absolute;
+  inset: 3px;
+  overflow: clip;
+  isolation: isolate;
+  border-radius: 52px;
+  background: #000;
+  touch-action: manipulation;
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+.iphone-home-stage {
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  overflow: hidden;
+  border-radius: inherit;
+  transform-origin: 50% 80%;
+}
+
+.iphone-device,
+.iphone-device * {
+  cursor: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='32' height='32' viewBox='0 0 32 32'%3E%3Cpath fill='%23ffffff' stroke='%23111111' stroke-width='1.4' stroke-linejoin='round' d='M12.4 2.6c1 0 1.8.8 1.8 1.8v9.1h.2V8.6a1.7 1.7 0 0 1 3.4 0v5h.2V9.8a1.6 1.6 0 1 1 3.2 0v4.4h.2V12a1.6 1.6 0 1 1 3.2 0v7.6c0 3.6-2.1 6.7-6 7.8l-1 .2h-4.3c-3.4 0-5.8-1.8-7.3-4.6L3.8 16.4A1.8 1.8 0 0 1 6.7 14l2.3 2.6V4.4c0-1 .8-1.8 1.8-1.8Z'/%3E%3C/svg%3E")
+      10 2,
+    pointer;
+}
+
+.iphone-screen:focus {
+  outline: none;
+}
+
+.iphone-screen.is-gesturing {
+  touch-action: none;
+}
+
+.iphone-screen.is-gesturing,
+.iphone-screen.is-gesturing * {
+  cursor: grabbing;
+}
+
+.iphone-screen.is-cc-open .iphone-live-pill,
+.iphone-screen.is-cc-open .iphone-status-trail {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.iphone-btn {
+  position: absolute;
+  padding: 0;
+  border: 0;
+  appearance: none;
+  background: linear-gradient(90deg, #86868d, #d4d4db 42%, #9a9aa2);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.5),
+    0 1px 2px rgba(0, 0, 0, 0.32);
+}
+
+.iphone-btn--power {
+  top: 176px;
+  right: -3px;
+  z-index: 6;
+  width: 3.5px;
+  height: 122px;
+  border-radius: 2px 1px 1px 2px;
+  cursor: pointer;
+}
+
+.iphone-btn--power::before {
+  content: "";
+  position: absolute;
+  top: -10px;
+  right: -12px;
+  bottom: -10px;
+  left: -10px;
+}
+
+.iphone-btn--silent {
+  top: 120px;
+  left: -3px;
+  width: 3.5px;
+  height: 30px;
+  border-radius: 1px 2px 2px 1px;
+}
+
+.iphone-btn--vol-up {
+  top: 176px;
+  left: -3px;
+  width: 3.5px;
+  height: 52px;
+  border-radius: 1px 2px 2px 1px;
+}
+
+.iphone-btn--vol-down {
+  top: 246px;
+  left: -3px;
+  width: 3.5px;
+  height: 52px;
+  border-radius: 1px 2px 2px 1px;
+}
+
+.iphone-antenna {
+  position: absolute;
+  z-index: 4;
+  width: 5px;
+  height: 1.5px;
+  pointer-events: none;
+  background: #5c5c62;
+  box-shadow: 0 0.5px 0 rgba(255, 255, 255, 0.22);
+}
+
+.iphone-antenna--l-top {
+  top: 10.5%;
+  left: 0;
+}
+
+.iphone-antenna--r-top {
+  top: 10.5%;
+  right: 0;
+}
+
+.iphone-antenna--l-bot {
+  bottom: 10.5%;
+  left: 0;
+}
+
+.iphone-antenna--r-bot {
+  bottom: 10.5%;
+  right: 0;
+}
+
+.iphone-island {
+  position: absolute;
+  top: var(--island-top);
+  left: 50%;
+  z-index: 40;
+  display: flex;
+  width: var(--island-w);
+  height: var(--island-h);
+  translate: -50% 0;
+  align-items: center;
+  justify-content: flex-end;
+  padding-right: 10px;
+  border-radius: 999px;
+  background: #000;
+}
+
+.iphone-island-lens {
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  background: radial-gradient(circle at 32% 28%, #4a5d78 0%, #1a2230 42%, #0a0c10 72%, #000 100%);
+  box-shadow:
+    inset 0 0 0 1.5px #05060a,
+    inset 0 0 0 2px rgba(90, 110, 140, 0.28);
+}
+
+.iphone-lock-layer {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.iphone-live-pill {
+  position: absolute;
+  top: var(--island-top);
+  right: calc(50% + (var(--island-w) / 2) + var(--island-gap));
+  z-index: 8;
+  display: inline-flex;
+  height: var(--island-h);
+  min-width: 74px;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  isolation: isolate;
+  padding: 0 12px 1px;
+  border-radius: 999px;
+  background: rgba(20, 20, 22, 0.42);
+  background-blend-mode: luminosity;
+  color: #fff;
+  font-family: "Inter Tight", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum" 1;
+  box-shadow:
+    inset 0 0.7px 0 rgba(255, 255, 255, 0.42),
+    inset 0 -0.4px 0 rgba(0, 0, 0, 0.22),
+    0 0 0 0.5px rgba(255, 255, 255, 0.32);
+  -webkit-backdrop-filter: blur(28px) saturate(180%);
+  backdrop-filter: blur(28px) saturate(180%);
+}
+
+.iphone-live-pill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.2px;
+  pointer-events: none;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(255, 255, 255, 0.16) 22%,
+    rgba(255, 255, 255, 0) 42%,
+    rgba(255, 255, 255, 0) 58%,
+    rgba(255, 255, 255, 0.16) 78%,
+    rgba(255, 255, 255, 0.5) 100%
+  );
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+}
+
+.iphone-live-weather {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  margin-right: 5px;
+  margin-left: -2px;
+}
+
+.iphone-live-weather svg {
+  display: block;
+  filter: drop-shadow(0 1px 2px rgb(0 0 0 / 35%));
+}
+
+.iphone-live-hour,
+.iphone-live-minute {
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.iphone-live-colon {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 3.5px;
+  width: 7px;
+  margin: 0 1px;
+}
+
+.iphone-live-colon i {
+  display: block;
+  width: 3.6px;
+  height: 3.6px;
+  border-radius: 50%;
+  background: #fff;
+}
+
+.iphone-status-trail {
+  position: absolute;
+  top: var(--island-top);
+  right: 20px;
+  z-index: 8;
+  display: flex;
+  height: var(--island-h);
+  align-items: center;
+  gap: 5px;
+}
+
+.iphone-battery {
+  display: flex;
+  align-items: center;
+  gap: 1.5px;
+}
+
+.iphone-battery-body {
+  position: relative;
+  box-sizing: border-box;
+  width: 24px;
+  height: 11.5px;
+  overflow: hidden;
+  padding: 1.3px;
+  border: 1.15px solid rgba(255, 255, 255, 0.92);
+  border-radius: 3.2px;
+}
+
+.iphone-battery-fill {
+  display: block;
+  width: 0;
+  height: 100%;
+  border-radius: 1.4px;
+  background: #30d158;
+}
+
+.iphone-battery-pct {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 8px;
+  font-weight: 700;
+  line-height: 1;
+  color: #fff;
+  font-variant-numeric: tabular-nums;
+  font-family: Inter, ui-sans-serif, system-ui, sans-serif;
+}
+
+.iphone-battery-nub {
+  width: 1.6px;
+  height: 4.6px;
+  border-radius: 0 1px 1px 0;
+  background: rgba(255, 255, 255, 0.9);
+}
+
+.iphone-lock-timeblock {
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: center;
+  padding-top: 56px;
+  text-align: center;
+}
+
+.iphone-lock-now {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+  align-items: flex-end;
+  padding: 0 22px 16px;
+}
+
+.iphone-date {
+  font-size: 20px;
+  font-weight: 590;
+  letter-spacing: 0.012em;
+  line-height: 1.1;
+  color: #fff;
+}
+
+.iphone-clock {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 1px;
+  color: #d2e5ff;
+  font-family: "Inter Tight", Inter, ui-sans-serif, system-ui, sans-serif;
+  font-size: 104px;
+  font-weight: 700;
+  letter-spacing: -0.07em;
+  line-height: 0.78;
+  text-shadow:
+    0 1px 0 rgba(186, 214, 255, 0.28),
+    0 10px 32px rgba(0, 0, 0, 0.28);
+}
+
+.iphone-clock-inner {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.iphone-clock-num {
+  font-variant-numeric: tabular-nums;
+}
+
+.iphone-clock-colon {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 16px;
+  width: 14px;
+  margin: 0 2px 0 4px;
+}
+
+.iphone-clock-colon i {
+  display: block;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.iphone-lock-actions {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  padding: 0 48px 10px;
+}
+
+.iphone-unlock-hint {
+  margin: 0 0 22px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  color: rgba(255, 255, 255, 0.78);
+}
+
+.iphone-glass-btn {
+  display: flex;
+  width: 50px;
+  height: 50px;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  border: 0;
+  border-radius: 999px;
+  background: rgba(40, 40, 44, 0.48);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.28),
+    0 0 0 0.5px rgba(255, 255, 255, 0.18);
+  -webkit-backdrop-filter: blur(18px);
+  backdrop-filter: blur(18px);
+  color: #fff;
+  cursor: pointer;
+  transition: background 180ms ease;
+}
+
+.iphone-glass-btn:active {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.iphone-glass-btn.is-on {
+  background: rgba(255, 255, 255, 0.9);
+  color: #1c1c1e;
+}
+
+.iphone-flashlight {
+  position: absolute;
+  inset: 0;
+  z-index: 22;
+  pointer-events: none;
+  background: radial-gradient(
+    circle at 50% 38%,
+    rgba(255, 250, 230, 0.92),
+    rgba(255, 228, 150, 0.42) 48%,
+    transparent 74%
+  );
+}
+
+.iphone-home-bar {
+  width: 134px;
+  height: 5px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.94);
+}
+
+.iphone-status-scroll {
+  display: flex;
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  margin-right: 2px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: rgba(255, 255, 255, 0.92);
+  cursor: inherit;
+}
+
+.iphone-status-scroll[hidden] {
+  display: none;
+}
+
+.iphone-status-scroll svg {
+  display: block;
+  animation: iphone-status-scroll 1.6s cubic-bezier(0.32, 0.72, 0, 1) infinite;
+}
+
+@keyframes iphone-status-scroll {
+  0%,
+  100% {
+    transform: translateY(0);
+    opacity: 0.7;
+  }
+  50% {
+    transform: translateY(2px);
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .iphone-status-scroll svg {
+    animation: none;
+  }
+
+  .iphone-glass-btn {
+    transition: none;
+  }
+}
