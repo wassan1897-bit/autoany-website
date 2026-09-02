@@ -39,6 +39,10 @@
   opacity: calc(1 - (var(--fog) * 0.88));
 }
 
+.nk-spline:not(.is-ready) canvas {
+  visibility: hidden;
+}
+
 .nk-spline canvas {
   display: block;
   width: 100% !important;

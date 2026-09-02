@@ -1,14 +1,31 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
+import type { Application, SPEObject } from "@splinetool/runtime";
+import Spline from "@splinetool/react-spline";
 import SiteNav from "./SiteNav";
 import ScrollAtmosphere from "./ScrollAtmosphere";
 import { EncryptedText } from "./ui/encrypted-text";
 import { HoverBorderGradientDemo } from "./hover-border-gradient-demo";
 import { CyberButton } from "./ui/CyberButton";
+import { useTheme, type Theme } from "../lib/theme";
 import { bindLiveSection } from "../lib/live-section";
+import {
+  markSplineReady,
+  SPLINE_SCENE_URL,
+} from "../lib/critical-assets";
 import "./Hero.css";
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
+
+const envChrome = new WeakMap<SPEObject, { visible: boolean }>();
+
+function allowSpline() {
+  const connection = (
+    navigator as Navigator & { connection?: { saveData?: boolean } }
+  ).connection;
+  if (connection?.saveData) return false;
+  return true;
+}
 
 function heroCovered() {
   const stage = document.querySelector(".open-stage") as HTMLElement | null;
@@ -18,12 +35,116 @@ function heroCovered() {
   return window.scrollY > window.innerHeight * 0.42;
 }
 
+function paintSplineCanvas(spline: Application, _theme: Theme) {
+  try {
+    spline.setBackgroundColor("transparent");
+  } catch {
+    /* ignore */
+  }
+  spline.canvas.style.backgroundColor = "transparent";
+
+  for (const obj of spline.getAllObjects()) {
+    const original = envChrome.get(obj);
+    if (original?.visible) obj.show();
+  }
+
+  try {
+    spline.requestRender();
+  } catch {
+    /* ignore */
+  }
+}
+
+function syncSplinePlayback(spline: Application, hide: boolean) {
+  if (hide) {
+    if (!spline.isStopped) spline.stop();
+  } else if (spline.isStopped) {
+    spline.play();
+  }
+  if (spline.canvas) {
+    spline.canvas.style.visibility = hide ? "hidden" : "visible";
+  }
+}
+
+function feedSplineCursor(
+  spline: Application,
+  clientX: number,
+  clientY: number,
+) {
+  const canvas = spline.canvas;
+  if (!canvas) return;
+  const rect = canvas.getBoundingClientRect();
+  const w = Math.max(rect.width, 1);
+  const h = Math.max(rect.height, 1);
+  const nx = ((clientX - rect.left) / w) * 2 - 1;
+  const ny = -((clientY - rect.top) / h) * 2 + 1;
+  const app = spline as Application & {
+    mouse?: { x: number; y: number };
+    _mouse?: { x: number; y: number };
+  };
+  if (app.mouse) {
+    app.mouse.x = nx;
+    app.mouse.y = ny;
+  } else {
+    app.mouse = { x: nx, y: ny };
+  }
+  if (app._mouse) {
+    app._mouse.x = nx;
+    app._mouse.y = ny;
+  }
+  canvas.dispatchEvent(
+    new PointerEvent("pointermove", {
+      bubbles: true,
+      cancelable: true,
+      clientX,
+      clientY,
+      pointerId: 1,
+      pointerType: "mouse",
+      view: window,
+    }),
+  );
+  canvas.dispatchEvent(
+    new MouseEvent("mousemove", {
+      bubbles: true,
+      cancelable: true,
+      clientX,
+      clientY,
+      view: window,
+    }),
+  );
+}
+
 type HeroProps = {
   active: boolean;
 };
 
 export default function Hero({ active }: HeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
+  const splineRef = useRef<Application | null>(null);
+  const activeRef = useRef(active);
+  activeRef.current = active;
+  const themeRef = useRef<Theme>("dark");
+  const { theme } = useTheme();
+  themeRef.current = theme;
+  const canSpline = useRef(allowSpline()).current;
+  const [splineReady, setSplineReady] = useState(false);
+
+  useEffect(() => {
+    if (!canSpline) {
+      markSplineReady();
+    }
+  }, [canSpline]);
+
+  useEffect(() => {
+    if (!canSpline) return;
+    const spline = splineRef.current;
+    if (spline) {
+      syncSplinePlayback(
+        spline,
+        !active || heroCovered() || document.hidden,
+      );
+    }
+  }, [active, canSpline]);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -38,17 +159,26 @@ export default function Hero({ active }: HeroProps) {
       section.style.setProperty("--fog", p.toFixed(4));
     };
 
+    const sync = (hide: boolean) => {
+      const spline = splineRef.current;
+      if (spline) syncSplinePlayback(spline, hide || !activeRef.current);
+    };
+
     const unbind = bindLiveSection(
       section,
       (live) => {
-        if (live && !heroCovered()) applyFog();
+        const covered = heroCovered();
+        sync(!live || covered || document.hidden);
+        if (live && !covered) applyFog();
       },
       { mark: false },
     );
 
     let raf = 0;
     const onScroll = () => {
-      if (heroCovered()) return;
+      const covered = heroCovered();
+      sync(covered || document.hidden);
+      if (covered) return;
       if (!raf) {
         raf = requestAnimationFrame(() => {
           raf = 0;
@@ -57,17 +187,76 @@ export default function Hero({ active }: HeroProps) {
       }
     };
 
+    let pointerRaf = 0;
+    let pointerX = 0;
+    let pointerY = 0;
+    const onPointer = (event: PointerEvent) => {
+      if (!activeRef.current || heroCovered() || document.hidden) return;
+      const spline = splineRef.current;
+      if (!spline || spline.isStopped) return;
+      pointerX = event.clientX;
+      pointerY = event.clientY;
+      if (pointerRaf) return;
+      pointerRaf = requestAnimationFrame(() => {
+        pointerRaf = 0;
+        const live = splineRef.current;
+        if (!live || live.isStopped || heroCovered() || document.hidden) return;
+        feedSplineCursor(live, pointerX, pointerY);
+      });
+    };
+
     applyFog();
     window.addEventListener("scroll", onScroll, { passive: true });
     window.addEventListener("resize", onScroll, { passive: true });
+    window.addEventListener("pointermove", onPointer, { passive: true });
 
     return () => {
       unbind();
       if (raf) cancelAnimationFrame(raf);
+      if (pointerRaf) cancelAnimationFrame(pointerRaf);
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
+      window.removeEventListener("pointermove", onPointer);
+      const spline = splineRef.current;
+      if (spline && !spline.isStopped) spline.stop();
     };
   }, []);
+
+  useEffect(() => {
+    const spline = splineRef.current;
+    if (spline) paintSplineCanvas(spline, theme);
+  }, [theme]);
+
+  const onSplineLoad = (spline: Application) => {
+    splineRef.current = spline;
+    setSplineReady(true);
+    markSplineReady();
+    const controls = spline.controls;
+    if (controls) {
+      controls.enableZoom = false;
+      controls.enablePan = false;
+    }
+    spline.canvas.style.pointerEvents = "auto";
+    spline.canvas.style.touchAction = "pan-y";
+    spline.canvas.addEventListener(
+      "wheel",
+      (event) => event.stopImmediatePropagation(),
+      { capture: true, passive: true },
+    );
+    paintSplineCanvas(spline, themeRef.current);
+    syncSplinePlayback(
+      spline,
+      !activeRef.current || heroCovered() || document.hidden,
+    );
+    try {
+      const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
+      (
+        spline as Application & { setPixelRatio?: (ratio: number) => void }
+      ).setPixelRatio?.(dpr);
+    } catch {
+      /* ignore */
+    }
+  };
 
   return (
     <section
@@ -82,6 +271,15 @@ export default function Hero({ active }: HeroProps) {
         animate={active ? { opacity: 1 } : { opacity: 0 }}
         transition={{ duration: 1.15, delay: active ? 0.15 : 0, ease: EASE }}
       >
+        <div className={`nk-spline${splineReady ? " is-ready" : ""}`}>
+          {canSpline && (
+            <Spline
+              scene={SPLINE_SCENE_URL}
+              onLoad={onSplineLoad}
+              style={{ width: "100%", height: "100%", pointerEvents: "auto" }}
+            />
+          )}
+        </div>
         <div className="nk-fog" aria-hidden />
         <div className="nk-mist" aria-hidden />
       </motion.div>

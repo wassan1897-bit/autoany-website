@@ -1,9 +1,9 @@
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import type { AssetReadiness } from "../lib/critical-assets";
+import { LOADER_MAX_MS, LOADER_MIN_MS } from "../lib/critical-assets";
 import { EncryptedText } from "./ui/encrypted-text";
 
-/** Counter reaches 100 at this mark; onComplete fires after COMPLETE_DELAY. */
-const COUNT_DURATION = 5000;
 const COMPLETE_DELAY = 400;
 
 const LINES = [
@@ -12,11 +12,23 @@ const LINES = [
   "autoany.io - automate everything.",
 ] as const;
 
+function waitUntil(deadline: number) {
+  const remaining = deadline - performance.now();
+  if (remaining <= 0) return Promise.resolve();
+  return new Promise<void>((resolve) => {
+    window.setTimeout(resolve, remaining);
+  });
+}
+
 type LoadingScreenProps = {
   onComplete: () => void;
+  readiness: AssetReadiness;
 };
 
-export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
+export default function LoadingScreen({
+  onComplete,
+  readiness,
+}: LoadingScreenProps) {
   const [count, setCount] = useState(0);
   const [lineIndex, setLineIndex] = useState(0);
   const onCompleteRef = useRef(onComplete);
@@ -25,28 +37,61 @@ export default function LoadingScreen({ onComplete }: LoadingScreenProps) {
   useEffect(() => {
     let raf = 0;
     let timeout: number | undefined;
-    let start: number | null = null;
+    let finished = false;
+    const loaderStart = performance.now();
+    const maxDeadline = loaderStart + LOADER_MAX_MS;
+    const minDeadline = loaderStart + LOADER_MIN_MS;
+
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      cancelAnimationFrame(raf);
+      setCount(100);
+      timeout = window.setTimeout(
+        () => onCompleteRef.current(),
+        COMPLETE_DELAY,
+      );
+    };
+
+    const unsub = readiness.subscribe((assetProgress) => {
+      if (finished) return;
+      const elapsed = performance.now() - loaderStart;
+      const timeProgress = Math.min(elapsed / LOADER_MAX_MS, 1) * 100;
+      setCount(
+        Math.round(Math.min(99, Math.max(timeProgress, assetProgress))),
+      );
+    });
 
     const tick = (now: number) => {
-      if (start === null) start = now;
-      const progress = Math.min((now - start) / COUNT_DURATION, 1);
-      setCount(Math.round(progress * 100));
-      if (progress < 1) {
-        raf = requestAnimationFrame(tick);
-      } else {
-        timeout = window.setTimeout(
-          () => onCompleteRef.current(),
-          COMPLETE_DELAY,
-        );
-      }
+      if (finished) return;
+      const elapsed = now - loaderStart;
+      const timeProgress = Math.min(elapsed / LOADER_MAX_MS, 1) * 100;
+      const assetProgress = readiness.getProgress();
+      setCount(
+        Math.round(Math.min(99, Math.max(timeProgress, assetProgress))),
+      );
+      raf = requestAnimationFrame(tick);
     };
 
     raf = requestAnimationFrame(tick);
+
+    const wait = async () => {
+      await Promise.all([
+        waitUntil(minDeadline),
+        Promise.race([readiness.whenReady(), waitUntil(maxDeadline)]),
+      ]);
+      finish();
+    };
+
+    void wait();
+
     return () => {
+      finished = true;
+      unsub();
       cancelAnimationFrame(raf);
       window.clearTimeout(timeout);
     };
-  }, []);
+  }, [readiness]);
 
   useEffect(() => {
     const interval = window.setInterval(

@@ -1,5 +1,5 @@
 import { AnimatePresence } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import ClientReviews from "../components/ClientReviews";
 import Explorations from "../components/Explorations";
 import FeaturesCards from "../components/FeaturesCards";
@@ -15,9 +15,11 @@ import SmoothScroll from "../components/SmoothScroll";
 import FeyCards from "../components/ui/fey-cards";
 import FloatingDockDemo from "../components/floating-dock-demo";
 import { AuroraBackground } from "../components/ui/aurora-background";
+import { getAssetReadiness } from "../lib/critical-assets";
 
 export default function Index() {
   const [isLoading, setIsLoading] = useState(true);
+  const readiness = useMemo(() => getAssetReadiness(), []);
 
   useEffect(() => {
     document.body.style.overflow = isLoading ? "hidden" : "";
@@ -31,7 +33,12 @@ export default function Index() {
       <FloatingDockDemo />
       <SmoothScroll enabled={!isLoading} />
       <AnimatePresence>
-        {isLoading && <LoadingScreen onComplete={() => setIsLoading(false)} />}
+        {isLoading && (
+          <LoadingScreen
+            readiness={readiness}
+            onComplete={() => setIsLoading(false)}
+          />
+        )}
       </AnimatePresence>
       <PageTransition>
         <main className="relative z-10">
