@@ -10,7 +10,12 @@ type SplineApp = Application & {
   renderOnDemand?: boolean;
 };
 
-/** Pause WebGL after this idle window (0 = disabled). */
+export type SplineGovernorOptions = {
+  /** 0 disables idle pause (recommended for hero). */
+  idleStopMs?: number;
+};
+
+/** Pause WebGL after this idle window when parked/off-screen (0 = disabled). */
 export function splineIdleStopMs(
   quality: EffectQuality = getEffectQuality(),
 ): number {
@@ -32,10 +37,11 @@ export type SplineGovernor = {
 export function createSplineGovernor(
   spline: Application,
   isActive: () => boolean,
+  options: SplineGovernorOptions = {},
 ): SplineGovernor {
   const quality = getEffectQuality();
   const maxFps = splineMaxFps(quality);
-  const idleMs = splineIdleStopMs(quality);
+  const idleMs = options.idleStopMs ?? splineIdleStopMs(quality);
   const app = spline as SplineApp;
 
   try {
@@ -47,6 +53,7 @@ export function createSplineGovernor(
   let raf = 0;
   let lastRender = 0;
   let lastActivity = performance.now();
+  let wasActive = false;
   const frameInterval = 1000 / maxFps;
 
   const requestFrame = () => {
@@ -57,9 +64,27 @@ export function createSplineGovernor(
     }
   };
 
+  const touch = () => {
+    lastActivity = performance.now();
+    if (spline.isStopped) spline.play();
+    requestFrame();
+  };
+
   const tick = (now: number) => {
     raf = requestAnimationFrame(tick);
-    if (!isActive()) return;
+    const active = isActive();
+
+    if (!active) {
+      wasActive = false;
+      return;
+    }
+
+    if (!wasActive) {
+      wasActive = true;
+      lastActivity = now;
+      if (spline.isStopped) spline.play();
+      requestFrame();
+    }
 
     const idle = idleMs > 0 && now - lastActivity >= idleMs;
     if (idle) {
@@ -78,11 +103,7 @@ export function createSplineGovernor(
   raf = requestAnimationFrame(tick);
 
   return {
-    touch: () => {
-      lastActivity = performance.now();
-      if (spline.isStopped) spline.play();
-      requestFrame();
-    },
+    touch,
     destroy: () => {
       cancelAnimationFrame(raf);
     },

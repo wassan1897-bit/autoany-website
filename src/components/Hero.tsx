@@ -142,6 +142,7 @@ export default function Hero({ active }: HeroProps) {
         spline,
         !active || heroCovered() || document.hidden,
       );
+      if (active) governorRef.current?.touch();
     }
   }, [active, canSpline]);
 
@@ -203,16 +204,16 @@ export default function Hero({ active }: HeroProps) {
     let lastPointerFeed = 0;
     const onPointer = (event: PointerEvent) => {
       if (!activeRef.current || heroCovered() || document.hidden) return;
+      governorRef.current?.touch();
       const spline = splineRef.current;
-      if (!spline || spline.isStopped) return;
+      if (!spline) return;
       pointerX = event.clientX;
       pointerY = event.clientY;
-      governorRef.current?.touch();
       if (pointerRaf) return;
       pointerRaf = requestAnimationFrame(() => {
         pointerRaf = 0;
         const live = splineRef.current;
-        if (!live || live.isStopped || heroCovered() || document.hidden) return;
+        if (!live || heroCovered() || document.hidden) return;
         const now = performance.now();
         if (now - lastPointerFeed < pointerGapRef.current) return;
         lastPointerFeed = now;
@@ -247,11 +248,16 @@ export default function Hero({ active }: HeroProps) {
   const onSplineLoad = (spline: Application) => {
     splineRef.current = spline;
     governorRef.current?.destroy();
-    governorRef.current = createSplineGovernor(spline, () => {
-      if (!activeRef.current || heroCovered() || document.hidden) return false;
-      if (shouldParkSpline()) return false;
-      return true;
-    });
+    governorRef.current = createSplineGovernor(
+      spline,
+      () => {
+        if (!activeRef.current || heroCovered() || document.hidden) return false;
+        if (shouldParkSpline()) return false;
+        return true;
+      },
+      { idleStopMs: 0 },
+    );
+    governorRef.current.touch();
     setSplineReady(true);
     markSplineReady();
     const controls = spline.controls;
