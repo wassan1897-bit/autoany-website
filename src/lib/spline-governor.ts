@@ -11,7 +11,7 @@ type SplineApp = Application & {
 };
 
 export type SplineGovernorOptions = {
-  /** 0 disables idle pause (recommended for hero). */
+  /** 0 disables idle pause (hero keeps the bot animating while it is on screen). */
   idleStopMs?: number;
 };
 
@@ -53,7 +53,7 @@ export function createSplineGovernor(
   let raf = 0;
   let lastRender = 0;
   let lastActivity = performance.now();
-  let wasActive = false;
+  let destroyed = false;
   const frameInterval = 1000 / maxFps;
 
   const requestFrame = () => {
@@ -64,40 +64,50 @@ export function createSplineGovernor(
     }
   };
 
-  const touch = () => {
-    lastActivity = performance.now();
-    if (spline.isStopped) spline.play();
-    requestFrame();
+  /**
+   * Stop the WebGL loop *and* our own rAF. The previous version re-armed
+   * `requestAnimationFrame` before checking `isActive()`, so the governor kept
+   * waking 60x/s — each wake running a `querySelector` and a
+   * `getBoundingClientRect` — for the entire life of the page, even with the
+   * hero scrolled far out of view.
+   */
+  const park = () => {
+    if (raf) cancelAnimationFrame(raf);
+    raf = 0;
+    if (!spline.isStopped) spline.stop();
   };
 
   const tick = (now: number) => {
-    raf = requestAnimationFrame(tick);
-    const active = isActive();
+    raf = 0;
+    if (destroyed) return;
 
-    if (!active) {
-      wasActive = false;
-      return;
-    }
-
-    if (!wasActive) {
-      wasActive = true;
-      lastActivity = now;
-      if (spline.isStopped) spline.play();
-      requestFrame();
-    }
-
-    const idle = idleMs > 0 && now - lastActivity >= idleMs;
-    if (idle) {
-      if (!spline.isStopped) spline.stop();
-      return;
-    }
-
-    if (spline.isStopped) spline.play();
-
+    // Only pay for the liveness checks at the render cadence, not every frame.
     if (now - lastRender >= frameInterval) {
+      if (!isActive()) {
+        park();
+        return;
+      }
+
+      if (idleMs > 0 && now - lastActivity >= idleMs) {
+        park();
+        return;
+      }
+
+      if (spline.isStopped) spline.play();
       requestFrame();
       lastRender = now;
     }
+
+    raf = requestAnimationFrame(tick);
+  };
+
+  /** Wake the loop after a park, and reset the idle timer. */
+  const touch = () => {
+    if (destroyed) return;
+    lastActivity = performance.now();
+    if (spline.isStopped) spline.play();
+    requestFrame();
+    if (!raf) raf = requestAnimationFrame(tick);
   };
 
   raf = requestAnimationFrame(tick);
@@ -105,7 +115,9 @@ export function createSplineGovernor(
   return {
     touch,
     destroy: () => {
-      cancelAnimationFrame(raf);
+      destroyed = true;
+      if (raf) cancelAnimationFrame(raf);
+      raf = 0;
     },
   };
 }

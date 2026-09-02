@@ -3,13 +3,15 @@ import { motion } from "framer-motion";
 import type { Application, SPEObject } from "@splinetool/runtime";
 import SiteNav from "./SiteNav";
 import ScrollAtmosphere from "./ScrollAtmosphere";
+import ErrorBoundary from "./ErrorBoundary";
 import { EncryptedText } from "./ui/encrypted-text";
 import { HoverBorderGradientDemo } from "./hover-border-gradient-demo";
 import { CyberButton } from "./ui/CyberButton";
 import { useTheme, type Theme } from "../lib/theme";
 import { bindLiveSection } from "../lib/live-section";
+import { onScrollFrame } from "../lib/scroll-bus";
 import {
-  markSplineReady,
+  preloadSplineScene,
   SPLINE_SCENE_URL,
 } from "../lib/critical-assets";
 import {
@@ -30,10 +32,19 @@ const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const envChrome = new WeakMap<SPEObject, { visible: boolean }>();
 
+/**
+ * Cached, because this is called from the pointer and scroll paths as well as
+ * the Spline render cadence - a `querySelector` per mouse move was showing up
+ * as ~120 document queries a second.
+ */
+let openStage: HTMLElement | null = null;
+
 function heroCovered() {
-  const stage = document.querySelector(".open-stage") as HTMLElement | null;
-  if (stage) {
-    return Number(stage.style.getPropertyValue("--open") || 0) > 0.22;
+  if (!openStage || !openStage.isConnected) {
+    openStage = document.querySelector(".open-stage");
+  }
+  if (openStage) {
+    return Number(openStage.style.getPropertyValue("--open") || 0) > 0.22;
   }
   return window.scrollY > window.innerHeight * 0.42;
 }
@@ -127,12 +138,40 @@ export default function Hero({ active }: HeroProps) {
   themeRef.current = theme;
   const canSpline = useRef(allowSpline()).current;
   const [splineReady, setSplineReady] = useState(false);
+  const [splineArmed, setSplineArmed] = useState(false);
+  const [splineFailed, setSplineFailed] = useState(false);
 
+  /**
+   * Hold the WebGL runtime back until the page is painted and idle.
+   *
+   * Parsing the scene and compiling its shaders is a single ~2s synchronous
+   * block; mounting it during startup meant that block landed on top of the
+   * loader, so the first thing a visitor got was a frozen tab.
+   */
   useEffect(() => {
-    if (!canSpline) {
-      markSplineReady();
+    if (!canSpline || !active || splineArmed) return;
+
+    let cancelled = false;
+    const arm = () => {
+      if (cancelled) return;
+      preloadSplineScene();
+      setSplineArmed(true);
+    };
+
+    if (typeof requestIdleCallback !== "undefined") {
+      const id = requestIdleCallback(arm, { timeout: 1500 });
+      return () => {
+        cancelled = true;
+        cancelIdleCallback(id);
+      };
     }
-  }, [canSpline]);
+
+    const id = window.setTimeout(arm, 400);
+    return () => {
+      cancelled = true;
+      window.clearTimeout(id);
+    };
+  }, [active, canSpline, splineArmed]);
 
   useEffect(() => {
     if (!canSpline) return;
@@ -150,8 +189,15 @@ export default function Hero({ active }: HeroProps) {
     const section = sectionRef.current;
     if (!section) return;
 
+    const hasOpenStage = () => {
+      if (!openStage || !openStage.isConnected) {
+        openStage = document.querySelector(".open-stage");
+      }
+      return Boolean(openStage);
+    };
+
     const applyFog = () => {
-      if (document.querySelector(".open-stage")) return;
+      if (hasOpenStage()) return;
       const p = Math.min(
         1,
         Math.max(0, window.scrollY / (window.innerHeight * 0.95)),
@@ -179,23 +225,28 @@ export default function Hero({ active }: HeroProps) {
       (live) => {
         const covered = heroCovered();
         sync(!live || covered || document.hidden);
-        if (live && !covered) applyFog();
+        if (live && !covered && !document.hidden) {
+          applyFog();
+          // The governor parks its own rAF when it goes inactive, so coming
+          // back into view has to wake it explicitly.
+          governorRef.current?.touch();
+        }
       },
       { mark: false },
     );
 
-    let raf = 0;
-    const onScroll = () => {
+    /**
+     * Everything here is inside the frame callback on purpose. It used to run
+     * the covered check, the park sync and a WebGL render request on every raw
+     * scroll event, outside the rAF guard that was meant to throttle it.
+     */
+    const onScrollTick = () => {
       const covered = heroCovered();
-      sync(covered || document.hidden);
-      if (!covered && !document.hidden) governorRef.current?.touch();
-      if (covered) return;
-      if (!raf) {
-        raf = requestAnimationFrame(() => {
-          raf = 0;
-          applyFog();
-        });
-      }
+      const hidden = document.hidden;
+      sync(covered || hidden);
+      if (covered || hidden) return;
+      governorRef.current?.touch();
+      applyFog();
     };
 
     let pointerRaf = 0;
@@ -203,10 +254,7 @@ export default function Hero({ active }: HeroProps) {
     let pointerY = 0;
     let lastPointerFeed = 0;
     const onPointer = (event: PointerEvent) => {
-      if (!activeRef.current || heroCovered() || document.hidden) return;
-      governorRef.current?.touch();
-      const spline = splineRef.current;
-      if (!spline) return;
+      if (!activeRef.current || !splineRef.current) return;
       pointerX = event.clientX;
       pointerY = event.clientY;
       if (pointerRaf) return;
@@ -217,21 +265,19 @@ export default function Hero({ active }: HeroProps) {
         const now = performance.now();
         if (now - lastPointerFeed < pointerGapRef.current) return;
         lastPointerFeed = now;
+        governorRef.current?.touch();
         feedSplineCursor(live, pointerX, pointerY);
       });
     };
 
     applyFog();
-    window.addEventListener("scroll", onScroll, { passive: true });
-    window.addEventListener("resize", onScroll, { passive: true });
+    const unsubscribeScroll = onScrollFrame(onScrollTick);
     window.addEventListener("pointermove", onPointer, { passive: true });
 
     return () => {
       unbind();
-      if (raf) cancelAnimationFrame(raf);
+      unsubscribeScroll();
       if (pointerRaf) cancelAnimationFrame(pointerRaf);
-      window.removeEventListener("scroll", onScroll);
-      window.removeEventListener("resize", onScroll);
       window.removeEventListener("pointermove", onPointer);
       governorRef.current?.destroy();
       governorRef.current = null;
@@ -259,7 +305,6 @@ export default function Hero({ active }: HeroProps) {
     );
     governorRef.current.touch();
     setSplineReady(true);
-    markSplineReady();
     const controls = spline.controls;
     if (controls) {
       controls.enableZoom = false;
@@ -301,15 +346,21 @@ export default function Hero({ active }: HeroProps) {
       >
         <div className={`nk-spline${splineReady ? " is-ready" : ""}`}>
           <div className="nk-spline-slot" aria-hidden />
-          {canSpline && (
-            <Suspense fallback={null}>
-              <Spline
-                scene={SPLINE_SCENE_URL}
-                onLoad={onSplineLoad}
-                renderOnDemand
-                style={{ width: "100%", height: "100%", pointerEvents: "auto" }}
-              />
-            </Suspense>
+          {canSpline && splineArmed && !splineFailed && (
+            <ErrorBoundary onError={() => setSplineFailed(true)}>
+              <Suspense fallback={null}>
+                <Spline
+                  scene={SPLINE_SCENE_URL}
+                  onLoad={onSplineLoad}
+                  renderOnDemand
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    pointerEvents: "auto",
+                  }}
+                />
+              </Suspense>
+            </ErrorBoundary>
           )}
         </div>
         <div className="nk-fog" aria-hidden />

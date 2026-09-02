@@ -1,3 +1,5 @@
+import { onScrollFrame } from "./scroll-bus";
+
 type LiveOpts = {
   /** Sticky stacks: a following painted sibling that enters the viewport covers this one. */
   coverNext?: boolean;
@@ -60,23 +62,12 @@ export function bindLiveSection(
   );
   io.observe(node);
 
-  let raf = 0;
-  const onScroll = () => {
-    if (raf) return;
-    raf = requestAnimationFrame(() => {
-      raf = 0;
-      apply();
-    });
-  };
-
-  window.addEventListener("scroll", onScroll, { passive: true });
-  document.addEventListener("visibilitychange", apply);
+  // One shared scroll listener for every binding, flushed once per frame.
+  const unsubscribeScroll = onScrollFrame(apply);
   apply();
 
   return () => {
     io.disconnect();
-    window.removeEventListener("scroll", onScroll);
-    document.removeEventListener("visibilitychange", apply);
-    if (raf) cancelAnimationFrame(raf);
+    unsubscribeScroll();
   };
 }

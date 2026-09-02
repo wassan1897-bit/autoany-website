@@ -13,6 +13,7 @@ import {
 import gsap from "gsap";
 import { ScrollTrigger } from "gsap/ScrollTrigger";
 import { bindLiveSection } from "../../lib/live-section";
+import { bestRasterSrc } from "../../lib/picture";
 import { cn } from "../../lib/cn";
 import { MotionSubtitle } from "./motion-subtitle";
 
@@ -341,6 +342,15 @@ export function OrbitalImageWheel({
         );
         const currentScale = 1 - darkIntensity * boundedScaleEffect;
 
+        // `zIndex` forces a stacking-context recalculation rather than a
+        // compositor-only update, so it is only written when the layer it
+        // resolves to actually changes.
+        const nextZ = Math.round((1 - focusIntensity) * 100);
+        if (card.dataset.oiwZ !== String(nextZ)) {
+          card.dataset.oiwZ = String(nextZ);
+          card.style.zIndex = String(nextZ);
+        }
+
         gsap.set(card, {
           x,
           y,
@@ -349,7 +359,6 @@ export function OrbitalImageWheel({
           rotate: 0,
           scale: currentScale,
           opacity: 0.34 + (1 - darkIntensity) * 0.66,
-          zIndex: Math.round((1 - focusIntensity) * 100),
           force3D: true,
         });
       });
@@ -766,7 +775,9 @@ export function OrbitalImageWheel({
                   <div className="oiw-plate">
                     <div
                       className="absolute inset-0 h-full w-full bg-cover bg-center"
-                      style={{ backgroundImage: `url(${img.src})` }}
+                      style={{
+                        backgroundImage: `url(${bestRasterSrc(img.src)})`,
+                      }}
                       role="img"
                       aria-label={img.alt ?? img.label ?? `Image ${i + 1}`}
                     />

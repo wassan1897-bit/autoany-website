@@ -59,6 +59,12 @@ export const EncryptedText: React.FC<EncryptedTextProps> = ({
   const isInView = useInView(ref, { once: true });
 
   const [revealCount, setRevealCount] = useState<number>(0);
+  /**
+   * Bumped only when the scramble characters change. Without it, the component
+   * re-rendered on every animation frame purely to repaint the same glyphs -
+   * three of these run at once during the loading sequence.
+   */
+  const [, setFlipTick] = useState(0);
   const animationFrameRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
   const lastFlipTimeRef = useRef<number>(0);
@@ -89,6 +95,7 @@ export const EncryptedText: React.FC<EncryptedTextProps> = ({
         Math.floor(elapsedMs / Math.max(1, revealDelayMs)),
       );
 
+      // Re-render only when a character actually changes, not on every frame.
       setRevealCount(currentRevealCount);
 
       if (currentRevealCount >= totalLength) {
@@ -108,6 +115,7 @@ export const EncryptedText: React.FC<EncryptedTextProps> = ({
           }
         }
         lastFlipTimeRef.current = now;
+        setFlipTick((t) => t + 1);
       }
 
       animationFrameRef.current = requestAnimationFrame(update);

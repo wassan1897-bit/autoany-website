@@ -29,8 +29,8 @@ export default function LoadingScreen({
   onComplete,
   readiness,
 }: LoadingScreenProps) {
-  const [count, setCount] = useState(0);
   const [lineIndex, setLineIndex] = useState(0);
+  const counterRef = useRef<HTMLSpanElement>(null);
   const onCompleteRef = useRef(onComplete);
   onCompleteRef.current = onComplete;
 
@@ -38,41 +38,44 @@ export default function LoadingScreen({
     let raf = 0;
     let timeout: number | undefined;
     let finished = false;
+    let shown = -1;
     const loaderStart = performance.now();
     const maxDeadline = loaderStart + LOADER_MAX_MS;
     const minDeadline = loaderStart + LOADER_MIN_MS;
+
+    /**
+     * Written straight to the DOM. This used to be `setState` inside a rAF
+     * loop, so the whole loading screen re-rendered 60 times a second for the
+     * entire duration - on top of an already saturated main thread.
+     */
+    const paint = (value: number) => {
+      if (value === shown) return;
+      shown = value;
+      const node = counterRef.current;
+      if (node) node.textContent = String(value).padStart(3, "0");
+    };
 
     const finish = () => {
       if (finished) return;
       finished = true;
       cancelAnimationFrame(raf);
-      setCount(100);
+      paint(100);
       timeout = window.setTimeout(
         () => onCompleteRef.current(),
         COMPLETE_DELAY,
       );
     };
 
-    const unsub = readiness.subscribe((assetProgress) => {
-      if (finished) return;
-      const elapsed = performance.now() - loaderStart;
-      const timeProgress = Math.min(elapsed / LOADER_MAX_MS, 1) * 100;
-      setCount(
-        Math.round(Math.min(99, Math.max(timeProgress, assetProgress))),
-      );
-    });
-
     const tick = (now: number) => {
       if (finished) return;
       const elapsed = now - loaderStart;
       const timeProgress = Math.min(elapsed / LOADER_MAX_MS, 1) * 100;
       const assetProgress = readiness.getProgress();
-      setCount(
-        Math.round(Math.min(99, Math.max(timeProgress, assetProgress))),
-      );
+      paint(Math.round(Math.min(99, Math.max(timeProgress, assetProgress))));
       raf = requestAnimationFrame(tick);
     };
 
+    paint(0);
     raf = requestAnimationFrame(tick);
 
     const wait = async () => {
@@ -85,11 +88,22 @@ export default function LoadingScreen({
 
     void wait();
 
+    /**
+     * rAF does not run in a hidden tab, so the exit transition never completes
+     * and `AnimatePresence` never unmounts us. Anyone opening the site in a
+     * background tab came back to a stuck loading screen.
+     */
+    const onVisible = () => {
+      if (document.hidden || !finished) return;
+      onCompleteRef.current();
+    };
+    document.addEventListener("visibilitychange", onVisible);
+
     return () => {
       finished = true;
-      unsub();
       cancelAnimationFrame(raf);
       window.clearTimeout(timeout);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, [readiness]);
 
@@ -177,8 +191,11 @@ export default function LoadingScreen({
       </div>
 
       <div className="absolute right-6 bottom-6 md:right-10 md:bottom-10">
-        <span className="inline-block min-w-[3.25em] text-right font-display text-6xl leading-none text-white/95 tabular-nums italic md:text-8xl lg:text-9xl">
-          {String(count).padStart(3, "0")}
+        <span
+          ref={counterRef}
+          className="inline-block min-w-[3.25em] text-right font-display text-6xl leading-none text-white/95 tabular-nums italic md:text-8xl lg:text-9xl"
+        >
+          000
         </span>
       </div>
     </motion.div>

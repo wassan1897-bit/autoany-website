@@ -12,7 +12,7 @@ export default function App() {
   const location = useLocation();
 
   return (
-    <MotionConfig reducedMotion="never">
+    <MotionConfig reducedMotion="user">
       <SiteCanvas />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>

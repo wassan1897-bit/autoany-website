@@ -5,6 +5,7 @@ import AutoAnyLogo from "./AutoAnyLogo";
 import OptimizedImage from "./ui/OptimizedImage";
 import { SYSTEMS } from "../lib/systems";
 import { STACK_TOOLS } from "../lib/stack-tools";
+import { onScrollFrame } from "../lib/scroll-bus";
 import { cn } from "../lib/cn";
 import {
   MotionNavigationMenu,
@@ -38,9 +39,8 @@ export default function SiteNav({ active }: SiteNavProps) {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > window.innerHeight * 0.8);
     };
-    window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
-    return () => window.removeEventListener("scroll", handleScroll);
+    return onScrollFrame(handleScroll);
   }, []);
 
   function openSystem(event: MouseEvent<HTMLAnchorElement>, slug: string) {

@@ -66,13 +66,26 @@
   display: none !important;
 }
 
+/*
+ * Both layers are driven from scroll, so both are transform/opacity only.
+ *
+ * `.nk-fog` used to animate `height`, which forces layout on every frame; it is
+ * now full height and scaled from the bottom, which reproduces the same
+ * gradient stretch on the compositor. `.nk-mist` used to put `var(--fog)` inside
+ * the gradient's alpha stops, so the entire viewport-sized gradient had to be
+ * regenerated and re-rasterised each frame; the stops are static now and the
+ * whole layer fades instead.
+ */
 .nk-fog {
   position: absolute;
   right: 0;
   bottom: 0;
   left: 0;
   z-index: 1;
-  height: calc(34% + (var(--fog) * 58%));
+  height: 92%;
+  transform-origin: 50% 100%;
+  transform: scaleY(calc(0.3696 + (var(--fog) * 0.6304)));
+  will-change: transform;
   pointer-events: none;
   background: linear-gradient(
     to top,
@@ -89,11 +102,13 @@
   inset: 0;
   z-index: 2;
   pointer-events: none;
+  opacity: var(--fog);
+  will-change: opacity;
   background: radial-gradient(
     ellipse 90% 80% at 50% 78%,
-    hsl(var(--hero-fog) / calc(var(--fog) * 0.98)) 0%,
-    hsl(var(--hero-fog) / calc(var(--fog) * 0.72)) 38%,
-    hsl(var(--hero-fog) / calc(var(--fog) * 0.28)) 62%,
+    hsl(var(--hero-fog) / 0.98) 0%,
+    hsl(var(--hero-fog) / 0.72) 38%,
+    hsl(var(--hero-fog) / 0.28) 62%,
     transparent 78%
   );
 }

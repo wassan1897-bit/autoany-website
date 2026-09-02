@@ -1,37 +1,25 @@
 import { STACK_TOOLS } from "./stack-tools";
-import { allowSpline } from "./performance";
 import { bestRasterSrc } from "./picture";
 
 export const SPLINE_SCENE_URL =
   "https://prod.spline.design/V8ffAat3AjccN4Cj/scene.splinecode";
 
-const SYSTEM_STILLS = [
-  "/assets/systems/01-ai-content-engine.png",
-  "/assets/systems/02-sales-follow-up.png",
-  "/assets/systems/03-client-onboarding.png",
-  "/assets/systems/04-lead-outreach.png",
-  "/assets/systems/05-linkedin-carousel.png",
-  "/assets/systems/06-monthly-intake.png",
-  "/assets/systems/07-multi-agent-support.png",
-  "/assets/systems/09-gmail-triage.png",
-  "/assets/systems/10-job-intake.png",
-  "/assets/systems/11-voice-booking.png",
-] as const;
-
+/**
+ * Only what is actually painted behind the loader.
+ *
+ * The system stills and work photos used to sit here too, but every one of them
+ * is below the fold and already lazy-loaded by the component that shows it, so
+ * preloading them only delayed the first paint.
+ */
 const CRITICAL_IMAGES = [
   "/assets/studio-backdrop.png",
-  "/assets/work/01-studio.jpg",
-  "/assets/work/03-intake.jpg",
-  "/assets/work/06-data.jpg",
-  ...SYSTEM_STILLS,
-  ...STACK_TOOLS.slice(0, 10).map((tool) => tool.src),
+  ...STACK_TOOLS.map((tool) => tool.src),
 ] as const;
 
 const WEIGHTS = {
-  spline: 40,
-  images: 25,
-  fonts: 15,
-  chunks: 20,
+  images: 45,
+  fonts: 20,
+  chunks: 35,
 } as const;
 
 /** Loader timing caps (shared with LoadingScreen). */
@@ -59,7 +47,12 @@ function preloadImage(src: string, signal: AbortSignal): Promise<void> {
   });
 }
 
-function preloadSplineScene() {
+/**
+ * Warm the Spline scene. Called by the hero when it arms the canvas, *not*
+ * during startup - it used to compete with the fonts and hero images for
+ * bandwidth while the user was still looking at a black screen.
+ */
+export function preloadSplineScene() {
   if (typeof document === "undefined") return;
   const id = "autoany-spline-preload";
   if (document.getElementById(id)) return;
@@ -77,11 +70,9 @@ export type AssetReadiness = {
   getProgress: () => number;
   whenReady: () => Promise<void>;
   subscribe: (listener: ProgressListener) => () => void;
-  markSplineReady: () => void;
 };
 
 export function createAssetReadiness(): AssetReadiness {
-  let splineDone = !allowSpline();
   let imagesDone = false;
   let fontsDone = false;
   let chunksDone = false;
@@ -96,17 +87,10 @@ export function createAssetReadiness(): AssetReadiness {
 
   function getProgress(): number {
     let total = 0;
-    if (splineDone) total += WEIGHTS.spline;
     if (imagesDone) total += WEIGHTS.images;
     if (fontsDone) total += WEIGHTS.fonts;
     if (chunksDone) total += WEIGHTS.chunks;
     return total;
-  }
-
-  function markSplineReady() {
-    if (splineDone) return;
-    splineDone = true;
-    notify();
   }
 
   async function preloadImages(signal: AbortSignal) {
@@ -128,9 +112,13 @@ export function createAssetReadiness(): AssetReadiness {
     notify();
   }
 
+  /**
+   * Scroll and motion runtimes only. `@splinetool/react-spline` is deliberately
+   * absent: it pulls a 4.4MB chunk that used to be awaited here, putting the
+   * whole WebGL runtime on the critical path before first paint.
+   */
   async function preloadChunks(signal: AbortSignal) {
     await Promise.all([
-      import("@splinetool/react-spline"),
       import("gsap"),
       import("gsap/ScrollTrigger"),
       import("motion/react"),
@@ -147,7 +135,6 @@ export function createAssetReadiness(): AssetReadiness {
     abort = new AbortController();
     const signal = abort.signal;
 
-    preloadSplineScene();
     void preloadFonts(signal);
     void preloadImages(signal);
     void preloadChunks(signal);
@@ -182,7 +169,6 @@ export function createAssetReadiness(): AssetReadiness {
     getProgress,
     whenReady,
     subscribe,
-    markSplineReady,
   };
 }
 
@@ -191,8 +177,4 @@ let handle: AssetReadiness | null = null;
 export function getAssetReadiness(): AssetReadiness {
   if (!handle) handle = createAssetReadiness();
   return handle;
-}
-
-export function markSplineReady() {
-  getAssetReadiness().markSplineReady();
 }

@@ -35,3 +35,6 @@ previews/
 # Agent tooling (not needed for deploy)
 .agents/
 skills-lock.json
+
+.vercel
+.env*

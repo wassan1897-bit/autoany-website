@@ -1,7 +1,8 @@
 import { motion, useReducedMotion } from "framer-motion";
-import { useRef, useSyncExternalStore } from "react";
+import { useEffect, useRef, useSyncExternalStore } from "react";
 import type { Tweet } from "react-tweet/api";
 
+import { bindLiveSection } from "../lib/live-section";
 import { CLIENT_REVIEWS } from "../lib/client-reviews";
 import { VerticalMarqueeClient } from "./unlumen-ui/vertical-marquee-client";
 import type { TweetItem } from "./unlumen-ui/vertical-marquee.types";
@@ -86,6 +87,14 @@ export default function ClientReviews() {
     getMarqueeColumns,
     () => 1 as 1 | 2,
   );
+
+  // The `#reviews.is-paused-live` rule in vertical-marquee.css had nothing
+  // applying the class, so the two 40s marquees never actually paused.
+  useEffect(() => {
+    const section = sectionRef.current;
+    if (!section) return;
+    return bindLiveSection(section);
+  }, []);
 
   return (
     <section

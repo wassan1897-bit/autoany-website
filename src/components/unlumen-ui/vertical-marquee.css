@@ -40,12 +40,9 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .nk-review-track {
-    animation: nk-review-up 40s linear infinite;
-  }
-
+  .nk-review-track,
   .nk-review-track--reverse {
-    animation-name: nk-review-down;
+    animation: none;
   }
 }
 

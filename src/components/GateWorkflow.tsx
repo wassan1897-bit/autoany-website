@@ -1,6 +1,8 @@
 import { useLayoutEffect, useRef } from "react";
 import { STACK_TOOLS } from "../lib/stack-tools";
 import { bindLiveSection } from "../lib/live-section";
+import { onScrollFrame } from "../lib/scroll-bus";
+import { bestRasterSrc } from "../lib/picture";
 import "./GateWorkflow.css";
 
 const CARD = 72;
@@ -204,7 +206,16 @@ function NodeCard({ node }: { node: Node }) {
           </text>
         ) : null}
         {src ? (
-          <image href={src} x={x + 8} y={y + 8} width={CARD - 16} height={CARD - 16} />
+          // SVG <image> has no <picture> equivalent, so point it at the WebP
+          // sibling directly - the PNG originals are 5-15x larger and these
+          // load above the fold.
+          <image
+            href={bestRasterSrc(src)}
+            x={x + 8}
+            y={y + 8}
+            width={CARD - 16}
+            height={CARD - 16}
+          />
         ) : (
           <g
             className="gate-wf-brand"
@@ -382,22 +393,14 @@ export default function GateWorkflow() {
       { coverNext: true },
     );
 
-    let raf = 0;
-    const onScroll = () => {
-      if (!live || raf) return;
-      raf = requestAnimationFrame(() => {
-        raf = 0;
-        tick();
-      });
-    };
-
-    window.addEventListener("scroll", onScroll, { passive: true });
+    const unsubscribeScroll = onScrollFrame(() => {
+      if (live) tick();
+    });
     sync();
 
     return () => {
       unbind();
-      window.removeEventListener("scroll", onScroll);
-      if (raf) cancelAnimationFrame(raf);
+      unsubscribeScroll();
     };
   }, []);
 

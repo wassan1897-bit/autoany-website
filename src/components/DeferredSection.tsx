@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState, type ReactNode } from "react";
+import { onScrollFrame } from "../lib/scroll-bus";
 
 type DeferredSectionProps = {
   children: ReactNode;
@@ -53,18 +54,11 @@ export default function DeferredSection({
       );
     if (node && io) io.observe(node);
 
-    let gateRaf = 0;
-    const onScroll = () => {
-      if (done || !waitUntilBelow) return;
-      if (gateRaf) return;
-      gateRaf = requestAnimationFrame(() => {
-        gateRaf = 0;
-        open();
-      });
-    };
-    if (waitUntilBelow) {
-      window.addEventListener("scroll", onScroll, { passive: true });
-    }
+    const unsubscribeScroll = waitUntilBelow
+      ? onScrollFrame(() => {
+          if (!done) open();
+        })
+      : undefined;
 
     const idleId =
       typeof requestIdleCallback !== "undefined"
@@ -75,8 +69,7 @@ export default function DeferredSection({
       timers.forEach((id) => window.clearTimeout(id));
       io?.disconnect();
       if (idleId) cancelIdleCallback(idleId);
-      if (waitUntilBelow) window.removeEventListener("scroll", onScroll);
-      if (gateRaf) cancelAnimationFrame(gateRaf);
+      unsubscribeScroll?.();
     };
   }, [delay, show, waitUntilBelow]);
 

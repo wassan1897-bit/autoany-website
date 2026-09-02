@@ -864,28 +864,37 @@ body {
   pointer-events: none;
 }
 
+/*
+ * No `will-change` here. This selector matches ~89 elements, and a static
+ * `will-change` gives every one of them a permanent compositing layer for the
+ * whole session. GSAP already sets it per-tween on what it actually animates.
+ */
 .atm-layer path:not([data-atm-neon]),
 .atm-layer circle,
 .atm-layer rect {
   vector-effect: non-scaling-stroke;
   shape-rendering: geometricPrecision;
   filter: none;
-  will-change: transform, opacity;
 }
 
+/*
+ * Glow radii are deliberately small. These paths have their dash offset
+ * rewritten every scroll frame, so the filter result can never be cached - a
+ * 58px blur over a long path meant a full re-raster per frame.
+ */
 [data-atm-neon="glow"] {
-  filter: drop-shadow(0 0 26px hsl(var(--atm-wire-color) / 0.72))
-    drop-shadow(0 0 58px hsl(var(--atm-wire-color) / 0.46));
+  filter: drop-shadow(0 0 10px hsl(var(--atm-wire-color) / 0.8))
+    drop-shadow(0 0 18px hsl(var(--atm-wire-color) / 0.5));
 }
 
 [data-atm-neon="core"] {
-  filter: drop-shadow(0 0 14px hsl(var(--atm-wire-color) / 1))
-    drop-shadow(0 0 30px hsl(var(--atm-wire-color) / 0.78));
+  filter: drop-shadow(0 0 6px hsl(var(--atm-wire-color) / 1))
+    drop-shadow(0 0 12px hsl(var(--atm-wire-color) / 0.8));
 }
 
 [data-atm-neon="fallback"] {
-  filter: drop-shadow(0 0 12px hsl(var(--atm-wire-color) / 0.88))
-    drop-shadow(0 0 24px hsl(var(--atm-wire-color) / 0.56));
+  filter: drop-shadow(0 0 6px hsl(var(--atm-wire-color) / 0.9))
+    drop-shadow(0 0 12px hsl(var(--atm-wire-color) / 0.6));
 }
 
 .atm-root::after {
@@ -954,13 +963,13 @@ body {
 }
 
 .atm-root--stack [data-atm-neon="glow"] {
-  filter: drop-shadow(0 0 16px hsl(var(--atm-wire-color) / 0.42))
-    drop-shadow(0 0 36px hsl(var(--atm-wire-color) / 0.24));
+  filter: drop-shadow(0 0 8px hsl(var(--atm-wire-color) / 0.48))
+    drop-shadow(0 0 14px hsl(var(--atm-wire-color) / 0.28));
 }
 
 .atm-root--stack [data-atm-neon="core"] {
-  filter: drop-shadow(0 0 8px hsl(var(--atm-wire-color) / 0.72))
-    drop-shadow(0 0 18px hsl(var(--atm-wire-color) / 0.42));
+  filter: drop-shadow(0 0 5px hsl(var(--atm-wire-color) / 0.8))
+    drop-shadow(0 0 10px hsl(var(--atm-wire-color) / 0.48));
 }
 
 @media (max-width: 767px) {
@@ -1001,11 +1010,18 @@ body {
   contain-intrinsic-size: auto 720px;
 }
 
-[data-effect-quality="low"] .after\:animate-aurora::after {
+/*
+ * The aurora is a viewport-sized blurred, blend-mode layer. Animating its
+ * background-position is a full-screen CPU raster every frame, and it sits
+ * behind opaque sections for most of the page - so it only runs on the top
+ * tier, and only while the hero is still on screen.
+ */
+[data-effect-quality="low"] .after\:animate-aurora::after,
+[data-effect-quality="medium"] .after\:animate-aurora::after {
   animation: none !important;
 }
 
-[data-effect-quality="medium"] .after\:animate-aurora::after {
-  animation-duration: 24s !important;
+html[data-aurora="off"] .after\:animate-aurora::after {
+  animation-play-state: paused !important;
 }
 

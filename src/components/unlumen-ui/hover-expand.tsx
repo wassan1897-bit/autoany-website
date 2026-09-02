@@ -82,11 +82,45 @@ export function HoverExpand({
     () => false,
   );
 
+  const rootRef = React.useRef<HTMLDivElement>(null);
+
+  /**
+   * Warm the expanded stills, but only once the rows are near the viewport and
+   * the browser is idle. Preloading all ten on mount put ~600KB in front of the
+   * first paint for a section that is well below the fold.
+   */
   React.useEffect(() => {
-    items.forEach((item) => {
-      const img = new Image();
-      img.src = bestRasterSrc(item.image);
-    });
+    const node = rootRef.current;
+    if (!node) return;
+
+    let idleId: number | null = null;
+    const warm = () => {
+      items.forEach((item) => {
+        const img = new Image();
+        img.src = bestRasterSrc(item.image);
+      });
+    };
+
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry?.isIntersecting) return;
+        io.disconnect();
+        idleId =
+          typeof requestIdleCallback !== "undefined"
+            ? requestIdleCallback(warm, { timeout: 2000 })
+            : window.setTimeout(warm, 200);
+      },
+      { rootMargin: "300px 0px" },
+    );
+    io.observe(node);
+
+    return () => {
+      io.disconnect();
+      if (idleId !== null) {
+        if (typeof cancelIdleCallback !== "undefined") cancelIdleCallback(idleId);
+        else window.clearTimeout(idleId);
+      }
+    };
   }, [items]);
 
   const openRow = (index: number) => {
@@ -101,7 +135,7 @@ export function HoverExpand({
   };
 
   return (
-    <div role="list" className={cn("w-full", className)}>
+    <div ref={rootRef} role="list" className={cn("w-full", className)}>
       {items.map((item, i) => {
         const isHovered = hoveredIndex === i;
         const isOtherHovered = hoveredIndex !== null && !isHovered;

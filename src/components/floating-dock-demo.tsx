@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { FloatingDock } from "@/components/ui/floating-dock";
+import { onScrollFrame } from "@/lib/scroll-bus";
 import {
   IconHome,
   IconTerminal2,
@@ -23,10 +24,8 @@ export default function FloatingDockDemo() {
       }
     };
 
-    window.addEventListener("scroll", handleScroll, { passive: true });
     handleScroll();
-
-    return () => window.removeEventListener("scroll", handleScroll);
+    return onScrollFrame(handleScroll);
   }, []);
 
   const links = [

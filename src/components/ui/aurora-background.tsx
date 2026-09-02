@@ -1,6 +1,7 @@
-import type { ReactNode } from "react";
+import { useEffect, type ReactNode } from "react";
 import { cn } from "../../lib/cn";
 import { allowAuroraMotion } from "../../lib/performance";
+import { onScrollFrame } from "../../lib/scroll-bus";
 
 interface AuroraBackgroundProps extends React.HTMLProps<HTMLDivElement> {
   children?: ReactNode;
@@ -14,6 +15,27 @@ export const AuroraBackground = ({
   ...props
 }: AuroraBackgroundProps) => {
   const motionOn = allowAuroraMotion();
+
+  /**
+   * The layer is `position: fixed` behind the whole page, so it cannot use the
+   * usual in-view helpers. Past the first screen it is covered by opaque
+   * sections, and repainting it there is wasted work.
+   */
+  useEffect(() => {
+    if (!motionOn) return;
+    const root = document.documentElement;
+    const sync = () => {
+      const off = window.scrollY > window.innerHeight * 1.15;
+      const next = off ? "off" : "on";
+      if (root.dataset.aurora !== next) root.dataset.aurora = next;
+    };
+    sync();
+    const unsubscribe = onScrollFrame(sync);
+    return () => {
+      unsubscribe();
+      delete root.dataset.aurora;
+    };
+  }, [motionOn]);
 
   return (
     <main>
@@ -37,7 +59,7 @@ export const AuroraBackground = ({
             filter blur-[10px] invert-0
             after:content-[""] after:absolute after:inset-0 after:[background-image:var(--dark-gradient),var(--aurora)]
             after:[background-size:200%,_100%]
-            ${motionOn ? "after:animate-aurora after:[background-attachment:fixed]" : ""}
+            ${motionOn ? "after:animate-aurora" : ""}
             after:mix-blend-difference
             pointer-events-none
             absolute -inset-[10px] opacity-50 will-change-transform`,

@@ -40,6 +40,9 @@ export const HeroParallax = ({
         ? { stiffness: 240, damping: 34, bounce: 72 }
         : { stiffness: 200, damping: 40, bounce: 0 };
 
+  // Springs keep integrating after the scroll stops, so only the horizontal
+  // drift - where the overshoot is actually visible - gets one. The rest scrub
+  // straight off scroll progress and settle the moment the user does.
   const translateX = useSpring(
     useTransform(scrollYProgress, [0, 1], [0, 900]),
     springConfig,
@@ -48,22 +51,10 @@ export const HeroParallax = ({
     useTransform(scrollYProgress, [0, 1], [0, -900]),
     springConfig,
   );
-  const rotateX = useSpring(
-    useTransform(scrollYProgress, [0, 0.18], [12, 0]),
-    springConfig,
-  );
-  const opacity = useSpring(
-    useTransform(scrollYProgress, [0, 0.18], [0.25, 1]),
-    springConfig,
-  );
-  const rotateZ = useSpring(
-    useTransform(scrollYProgress, [0, 0.18], [14, 0]),
-    springConfig,
-  );
-  const translateY = useSpring(
-    useTransform(scrollYProgress, [0, 0.22], [-160, 40]),
-    springConfig,
-  );
+  const rotateX = useTransform(scrollYProgress, [0, 0.18], [12, 0]);
+  const opacity = useTransform(scrollYProgress, [0, 0.18], [0.25, 1]);
+  const rotateZ = useTransform(scrollYProgress, [0, 0.18], [14, 0]);
+  const translateY = useTransform(scrollYProgress, [0, 0.22], [-160, 40]);
 
   return (
     <div

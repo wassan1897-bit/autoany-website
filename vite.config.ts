@@ -18,7 +18,11 @@ export default defineConfig({
     rollupOptions: {
       output: {
         manualChunks(id) {
-          if (id.includes("@splinetool")) return "spline";
+          // @splinetool is deliberately NOT named here. A named manual chunk
+          // joins the entry's preload graph, so Vite emitted a
+          // `<link rel="modulepreload">` for the 4.4MB WebGL runtime in the
+          // document head. Left unnamed, it splits off the lazy import in
+          // Hero.tsx and is only fetched once the hero asks for it.
           if (id.includes("node_modules/gsap")) return "gsap";
           if (id.includes("node_modules/lenis")) return "lenis";
           if (

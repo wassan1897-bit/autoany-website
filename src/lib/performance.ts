@@ -102,11 +102,11 @@ export function splinePixelRatio(scrolledAway = false): number {
 export function splineMaxFps(quality: EffectQuality = getEffectQuality()): number {
   switch (quality) {
     case "low":
-      return 24;
+      return 18;
     case "medium":
-      return 30;
+      return 24;
     default:
-      return 45;
+      return 40;
   }
 }
 
@@ -131,11 +131,20 @@ export function allowAtmosphereDraw(): boolean {
   return !window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
-/** Pause WebGL when work section dominates the viewport. */
+/**
+ * Pause WebGL when the work section dominates the viewport.
+ *
+ * The element lookup is cached: this runs on the Spline render cadence, and a
+ * `getElementById` per call showed up as measurable scroll-time work.
+ */
+let workSection: HTMLElement | null = null;
+
 export function shouldParkSpline(): boolean {
-  const work = document.getElementById("work");
-  if (!work) return false;
-  const rect = work.getBoundingClientRect();
+  if (!workSection || !workSection.isConnected) {
+    workSection = document.getElementById("work");
+  }
+  if (!workSection) return false;
+  const rect = workSection.getBoundingClientRect();
   return rect.top < window.innerHeight * 0.42;
 }
 

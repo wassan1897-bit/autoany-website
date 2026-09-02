@@ -1,5 +1,5 @@
 "use client";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { motion } from "framer-motion";
 import { cn } from "../../lib/cn";
 
@@ -24,6 +24,8 @@ export function HoverBorderGradient({
 >) {
   const [hovered, setHovered] = useState<boolean>(false);
   const [direction, setDirection] = useState<Direction>("TOP");
+  const hostRef = useRef<HTMLElement>(null);
+  const [onScreen, setOnScreen] = useState(false);
 
   const rotateDirection = (currentDirection: Direction): Direction => {
     const directions: Direction[] = ["TOP", "LEFT", "BOTTOM", "RIGHT"];
@@ -46,17 +48,30 @@ export function HoverBorderGradient({
   const highlight =
     "radial-gradient(75% 181.15942028985506% at 50% 50%, #3275F8 0%, rgba(255, 255, 255, 0) 100%)";
 
+  // Animating a radial gradient cannot be composited, so every tick of this
+  // interval is a repaint. Only pay for it while the button is actually visible.
   useEffect(() => {
-    if (!hovered) {
-      const interval = setInterval(() => {
-        setDirection((prevState) => rotateDirection(prevState));
-      }, duration * 1000);
-      return () => clearInterval(interval);
-    }
-  }, [hovered]);
+    const node = hostRef.current;
+    if (!node) return;
+    const io = new IntersectionObserver(
+      ([entry]) => setOnScreen(Boolean(entry?.isIntersecting)),
+      { rootMargin: "10% 0px" },
+    );
+    io.observe(node);
+    return () => io.disconnect();
+  }, []);
+
+  useEffect(() => {
+    if (hovered || !onScreen) return;
+    const interval = setInterval(() => {
+      setDirection((prevState) => rotateDirection(prevState));
+    }, duration * 1000);
+    return () => clearInterval(interval);
+  }, [hovered, onScreen, duration]);
 
   return (
     <Tag
+      ref={hostRef}
       onMouseEnter={() => setHovered(true)}
       onMouseLeave={() => setHovered(false)}
       className={cn(

@@ -1,3 +1,5 @@
+import { onScrollFrame } from "./scroll-bus";
+
 function isFiller(el: HTMLElement) {
   return el.getAttribute("aria-hidden") === "true" && !el.id;
 }
@@ -29,18 +31,34 @@ export function bindWorkflowProgress(root: HTMLElement) {
     (root.closest(".scroll-chapter") as HTMLElement | null) ??
     (root.closest("section") as HTMLElement | null) ??
     root;
-  let frame = 0;
 
-  const paint = () => {
-    frame = 0;
+  /**
+   * Geometry is measured lazily and reused until the viewport changes.
+   *
+   * `inFlowTop` walks the offsetParent chain calling `getComputedStyle` on every
+   * ancestor; running that twice per scroll frame was pure layout thrash for
+   * numbers that only move on resize.
+   */
+  let cache: { start: number; span: number; key: string } | null = null;
+
+  const measure = () => {
+    const key = `${window.innerWidth}x${window.innerHeight}x${document.body.scrollHeight}`;
+    if (cache && cache.key === key) return cache;
     const start = inFlowTop(section);
     const next = nextTrack(section);
-    const nextTop = next ? inFlowTop(next) : start + Math.max(section.offsetHeight, window.innerHeight);
+    const nextTop = next
+      ? inFlowTop(next)
+      : start + Math.max(section.offsetHeight, window.innerHeight);
     const pinned =
       getComputedStyle(section).position === "sticky" ||
       section.classList.contains("scroll-chapter");
     const end = pinned ? nextTop - window.innerHeight : nextTop;
-    const span = Math.max(1, end - start);
+    cache = { start, span: Math.max(1, end - start), key };
+    return cache;
+  };
+
+  const paint = () => {
+    const { start, span } = measure();
     const raw = (window.scrollY - start) / span;
     const t = Math.min(1, Math.max(0, raw));
     root.style.setProperty("--wf-p", t.toFixed(4));
@@ -50,17 +68,6 @@ export function bindWorkflowProgress(root: HTMLElement) {
     });
   };
 
-  const onScroll = () => {
-    if (frame) return;
-    frame = requestAnimationFrame(paint);
-  };
-
   paint();
-  window.addEventListener("scroll", onScroll, { passive: true });
-  window.addEventListener("resize", onScroll);
-  return () => {
-    window.removeEventListener("scroll", onScroll);
-    window.removeEventListener("resize", onScroll);
-    if (frame) cancelAnimationFrame(frame);
-  };
+  return onScrollFrame(paint);
 }
