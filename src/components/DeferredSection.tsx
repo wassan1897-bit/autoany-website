@@ -81,7 +81,7 @@ export default function DeferredSection({
   }, [delay, show, waitUntilBelow]);
 
   return (
-    <div ref={ref} style={!show ? { minHeight } : undefined}>
+    <div ref={ref} style={{ minHeight }}>
       {show ? children : null}
     </div>
   );

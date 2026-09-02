@@ -23,9 +23,9 @@ export default function Index() {
   const readiness = useMemo(() => getAssetReadiness(), []);
 
   useEffect(() => {
-    document.body.style.overflow = isLoading ? "hidden" : "";
+    document.documentElement.classList.toggle("is-loading", isLoading);
     return () => {
-      document.body.style.overflow = "";
+      document.documentElement.classList.remove("is-loading");
     };
   }, [isLoading]);
 

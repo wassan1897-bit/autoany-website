@@ -24,6 +24,8 @@
   inset: 0;
   z-index: 0;
   overflow: hidden;
+  contain: layout;
+  min-height: 100%;
 }
 
 .nk-spline {
@@ -33,10 +35,18 @@
   z-index: 0;
   width: 108%;
   height: 92%;
+  min-height: 52vh;
   pointer-events: auto;
+  contain: layout style paint;
   transform: translate(-50%, calc(-50% + (var(--fog) * 140px)))
     scale(calc(1.06 - (var(--fog) * 0.14)));
   opacity: calc(1 - (var(--fog) * 0.88));
+}
+
+.nk-spline-slot {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
 }
 
 .nk-spline:not(.is-ready) canvas {
@@ -47,6 +57,7 @@
   display: block;
   width: 100% !important;
   height: 100% !important;
+  min-height: 100%;
   pointer-events: auto;
   touch-action: pan-y;
 }
@@ -731,6 +742,8 @@
   display: flex;
   flex-wrap: wrap;
   gap: 14px;
+  min-width: 9.5rem;
+  min-height: 2.75rem;
 }
 
 .nk-pill {

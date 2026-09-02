@@ -15,6 +15,9 @@ export default function OptimizedImage({
   loading,
   decoding = "async",
   fetchPriority,
+  width,
+  height,
+  style,
   ...rest
 }: OptimizedImageProps) {
   if (!src) return null;
@@ -23,14 +26,21 @@ export default function OptimizedImage({
   const resolvedLoading = priority ? "eager" : (loading ?? "lazy");
   const resolvedFetchPriority =
     fetchPriority ?? (priority ? "high" : undefined);
+  const reservedStyle =
+    width && height
+      ? { aspectRatio: `${width} / ${height}`, ...style }
+      : style;
 
   if (!webp) {
     return (
       <img
         src={src}
+        width={width}
+        height={height}
         loading={resolvedLoading}
         decoding={decoding}
         fetchPriority={resolvedFetchPriority}
+        style={reservedStyle}
         {...rest}
       />
     );
@@ -41,9 +51,12 @@ export default function OptimizedImage({
       <source srcSet={webp} type="image/webp" />
       <img
         src={src}
+        width={width}
+        height={height}
         loading={resolvedLoading}
         decoding={decoding}
         fetchPriority={resolvedFetchPriority}
+        style={reservedStyle}
         {...rest}
       />
     </picture>

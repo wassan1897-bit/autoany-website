@@ -90,11 +90,23 @@ export function splinePixelRatio(scrolledAway = false): number {
 
   switch (getEffectQuality()) {
     case "low":
-      return Math.min(dpr, 0.68);
+      return Math.min(dpr, 0.58);
     case "medium":
-      return Math.min(dpr, 0.82);
+      return Math.min(dpr, 0.72);
     default:
       return Math.min(dpr, 1.02);
+  }
+}
+
+/** Target Spline render cadence for the current device tier. */
+export function splineMaxFps(quality: EffectQuality = getEffectQuality()): number {
+  switch (quality) {
+    case "low":
+      return 24;
+    case "medium":
+      return 30;
+    default:
+      return 45;
   }
 }
 

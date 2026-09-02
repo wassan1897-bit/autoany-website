@@ -177,7 +177,7 @@ export default function LoadingScreen({
       </div>
 
       <div className="absolute right-6 bottom-6 md:right-10 md:bottom-10">
-        <span className="font-display text-6xl leading-none text-white/95 tabular-nums italic md:text-8xl lg:text-9xl">
+        <span className="inline-block min-w-[3.25em] text-right font-display text-6xl leading-none text-white/95 tabular-nums italic md:text-8xl lg:text-9xl">
           {String(count).padStart(3, "0")}
         </span>
       </div>

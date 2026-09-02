@@ -132,6 +132,11 @@ html.theme-ready header {
 html {
   height: 100%;
   background-color: hsl(var(--bg));
+  scrollbar-gutter: stable;
+}
+
+html.is-loading {
+  overflow: hidden;
 }
 
 #root {

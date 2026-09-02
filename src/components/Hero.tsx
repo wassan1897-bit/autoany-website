@@ -17,6 +17,11 @@ import {
   shouldParkSpline,
   splinePixelRatio,
 } from "../lib/performance";
+import {
+  createSplineGovernor,
+  splinePointerIntervalMs,
+  type SplineGovernor,
+} from "../lib/spline-governor";
 import "./Hero.css";
 
 const Spline = lazy(() => import("@splinetool/react-spline"));
@@ -44,12 +49,6 @@ function paintSplineCanvas(spline: Application, _theme: Theme) {
   for (const obj of spline.getAllObjects()) {
     const original = envChrome.get(obj);
     if (original?.visible) obj.show();
-  }
-
-  try {
-    spline.requestRender();
-  } catch {
-    /* ignore */
   }
 }
 
@@ -119,6 +118,8 @@ type HeroProps = {
 export default function Hero({ active }: HeroProps) {
   const sectionRef = useRef<HTMLElement>(null);
   const splineRef = useRef<Application | null>(null);
+  const governorRef = useRef<SplineGovernor | null>(null);
+  const pointerGapRef = useRef(splinePointerIntervalMs());
   const activeRef = useRef(active);
   activeRef.current = active;
   const themeRef = useRef<Theme>("dark");
@@ -186,6 +187,7 @@ export default function Hero({ active }: HeroProps) {
     const onScroll = () => {
       const covered = heroCovered();
       sync(covered || document.hidden);
+      if (!covered && !document.hidden) governorRef.current?.touch();
       if (covered) return;
       if (!raf) {
         raf = requestAnimationFrame(() => {
@@ -198,17 +200,22 @@ export default function Hero({ active }: HeroProps) {
     let pointerRaf = 0;
     let pointerX = 0;
     let pointerY = 0;
+    let lastPointerFeed = 0;
     const onPointer = (event: PointerEvent) => {
       if (!activeRef.current || heroCovered() || document.hidden) return;
       const spline = splineRef.current;
       if (!spline || spline.isStopped) return;
       pointerX = event.clientX;
       pointerY = event.clientY;
+      governorRef.current?.touch();
       if (pointerRaf) return;
       pointerRaf = requestAnimationFrame(() => {
         pointerRaf = 0;
         const live = splineRef.current;
         if (!live || live.isStopped || heroCovered() || document.hidden) return;
+        const now = performance.now();
+        if (now - lastPointerFeed < pointerGapRef.current) return;
+        lastPointerFeed = now;
         feedSplineCursor(live, pointerX, pointerY);
       });
     };
@@ -225,6 +232,8 @@ export default function Hero({ active }: HeroProps) {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
       window.removeEventListener("pointermove", onPointer);
+      governorRef.current?.destroy();
+      governorRef.current = null;
       const spline = splineRef.current;
       if (spline && !spline.isStopped) spline.stop();
     };
@@ -237,6 +246,12 @@ export default function Hero({ active }: HeroProps) {
 
   const onSplineLoad = (spline: Application) => {
     splineRef.current = spline;
+    governorRef.current?.destroy();
+    governorRef.current = createSplineGovernor(spline, () => {
+      if (!activeRef.current || heroCovered() || document.hidden) return false;
+      if (shouldParkSpline()) return false;
+      return true;
+    });
     setSplineReady(true);
     markSplineReady();
     const controls = spline.controls;
@@ -279,11 +294,13 @@ export default function Hero({ active }: HeroProps) {
         transition={{ duration: 1.15, delay: active ? 0.15 : 0, ease: EASE }}
       >
         <div className={`nk-spline${splineReady ? " is-ready" : ""}`}>
+          <div className="nk-spline-slot" aria-hidden />
           {canSpline && (
             <Suspense fallback={null}>
               <Spline
                 scene={SPLINE_SCENE_URL}
                 onLoad={onSplineLoad}
+                renderOnDemand
                 style={{ width: "100%", height: "100%", pointerEvents: "auto" }}
               />
             </Suspense>

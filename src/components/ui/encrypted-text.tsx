@@ -128,11 +128,15 @@ export const EncryptedText: React.FC<EncryptedTextProps> = ({
   return (
     <motion.span
       ref={ref}
-      className={cn(className)}
+      className={cn("relative inline-grid", className)}
       aria-label={text}
       role="text"
     >
-      {text.split("").map((char, index) => {
+      <span className="invisible select-none" aria-hidden>
+        {text}
+      </span>
+      <span className="absolute inset-0 overflow-hidden whitespace-pre">
+        {text.split("").map((char, index) => {
         const isRevealed = index < revealCount;
         const displayChar = isRevealed
           ? char
@@ -150,6 +154,7 @@ export const EncryptedText: React.FC<EncryptedTextProps> = ({
           </span>
         );
       })}
+      </span>
     </motion.span>
   );
 };
