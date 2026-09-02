@@ -1,0 +1,6 @@
+test-screenshots
+.playwright-cli
+node_modules
+dist
+.agents
+previews
