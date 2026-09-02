@@ -1,6 +1,7 @@
 import { AnimatePresence } from "framer-motion";
 import { useEffect, useMemo, useState } from "react";
 import ClientReviews from "../components/ClientReviews";
+import DeferredSection from "../components/DeferredSection";
 import Explorations from "../components/Explorations";
 import FeaturesCards from "../components/FeaturesCards";
 import Hero from "../components/Hero";
@@ -56,18 +57,26 @@ export default function Index() {
               <HeroParallaxDemo />
             </ScrollChapter>
             <Journal />
-            <div className="relative bg-black">
-              <Explorations />
-            </div>
-            <div className="relative bg-black">
-              <FeaturesCards />
-            </div>
-            <div className="relative bg-black">
-              <ClientReviews />
-            </div>
-            <div className="relative bg-black">
-              <FeyCards />
-            </div>
+            <DeferredSection delay={220} waitUntilBelow="work">
+              <div className="relative bg-black perf-section">
+                <Explorations />
+              </div>
+            </DeferredSection>
+            <DeferredSection delay={320} waitUntilBelow="work">
+              <div className="relative bg-black perf-section">
+                <FeaturesCards />
+              </div>
+            </DeferredSection>
+            <DeferredSection delay={420} waitUntilBelow="work">
+              <div className="relative bg-black perf-section">
+                <ClientReviews />
+              </div>
+            </DeferredSection>
+            <DeferredSection delay={520} waitUntilBelow="work">
+              <div className="relative bg-black perf-section">
+                <FeyCards />
+              </div>
+            </DeferredSection>
           </div>
         </main>
       </PageTransition>

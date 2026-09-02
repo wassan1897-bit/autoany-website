@@ -1,7 +1,6 @@
-import { useEffect, useRef, useState } from "react";
+import { lazy, Suspense, useEffect, useRef, useState } from "react";
 import { motion } from "framer-motion";
 import type { Application, SPEObject } from "@splinetool/runtime";
-import Spline from "@splinetool/react-spline";
 import SiteNav from "./SiteNav";
 import ScrollAtmosphere from "./ScrollAtmosphere";
 import { EncryptedText } from "./ui/encrypted-text";
@@ -13,19 +12,18 @@ import {
   markSplineReady,
   SPLINE_SCENE_URL,
 } from "../lib/critical-assets";
+import {
+  allowSpline,
+  shouldParkSpline,
+  splinePixelRatio,
+} from "../lib/performance";
 import "./Hero.css";
+
+const Spline = lazy(() => import("@splinetool/react-spline"));
 
 const EASE: [number, number, number, number] = [0.16, 1, 0.3, 1];
 
 const envChrome = new WeakMap<SPEObject, { visible: boolean }>();
-
-function allowSpline() {
-  const connection = (
-    navigator as Navigator & { connection?: { saveData?: boolean } }
-  ).connection;
-  if (connection?.saveData) return false;
-  return true;
-}
 
 function heroCovered() {
   const stage = document.querySelector(".open-stage") as HTMLElement | null;
@@ -160,8 +158,18 @@ export default function Hero({ active }: HeroProps) {
     };
 
     const sync = (hide: boolean) => {
+      const parked = shouldParkSpline();
       const spline = splineRef.current;
-      if (spline) syncSplinePlayback(spline, hide || !activeRef.current);
+      if (spline) {
+        syncSplinePlayback(spline, hide || !activeRef.current || parked);
+        try {
+          (
+            spline as Application & { setPixelRatio?: (ratio: number) => void }
+          ).setPixelRatio?.(splinePixelRatio(parked || hide));
+        } catch {
+          /* ignore */
+        }
+      }
     };
 
     const unbind = bindLiveSection(
@@ -249,10 +257,9 @@ export default function Hero({ active }: HeroProps) {
       !activeRef.current || heroCovered() || document.hidden,
     );
     try {
-      const dpr = Math.min(window.devicePixelRatio || 1, 1.25);
       (
         spline as Application & { setPixelRatio?: (ratio: number) => void }
-      ).setPixelRatio?.(dpr);
+      ).setPixelRatio?.(splinePixelRatio(shouldParkSpline()));
     } catch {
       /* ignore */
     }
@@ -273,11 +280,13 @@ export default function Hero({ active }: HeroProps) {
       >
         <div className={`nk-spline${splineReady ? " is-ready" : ""}`}>
           {canSpline && (
-            <Spline
-              scene={SPLINE_SCENE_URL}
-              onLoad={onSplineLoad}
-              style={{ width: "100%", height: "100%", pointerEvents: "auto" }}
-            />
+            <Suspense fallback={null}>
+              <Spline
+                scene={SPLINE_SCENE_URL}
+                onLoad={onSplineLoad}
+                style={{ width: "100%", height: "100%", pointerEvents: "auto" }}
+              />
+            </Suspense>
           )}
         </div>
         <div className="nk-fog" aria-hidden />

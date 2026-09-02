@@ -1,10 +1,12 @@
 import { AnimatePresence, MotionConfig } from "framer-motion";
+import { lazy, Suspense } from "react";
 import { Route, Routes, useLocation } from "react-router-dom";
 import SiteCanvas from "./components/SiteCanvas";
-import Features from "./pages/Features";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
-import SystemCase from "./pages/SystemCase";
+
+const Features = lazy(() => import("./pages/Features"));
+const SystemCase = lazy(() => import("./pages/SystemCase"));
 
 export default function App() {
   const location = useLocation();
@@ -15,8 +17,22 @@ export default function App() {
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>
           <Route path="/" element={<Index />} />
-          <Route path="/features" element={<Features />} />
-          <Route path="/systems/:slug" element={<SystemCase />} />
+          <Route
+            path="/features"
+            element={
+              <Suspense fallback={null}>
+                <Features />
+              </Suspense>
+            }
+          />
+          <Route
+            path="/systems/:slug"
+            element={
+              <Suspense fallback={null}>
+                <SystemCase />
+              </Suspense>
+            }
+          />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </AnimatePresence>

@@ -7,6 +7,8 @@ import {
   useSpring,
   type MotionValue,
 } from "motion/react";
+import OptimizedImage from "./OptimizedImage";
+import { getEffectQuality } from "../../lib/performance";
 
 export type HeroParallaxProduct = {
   title: string;
@@ -30,7 +32,13 @@ export const HeroParallax = ({
     offset: ["start start", "end start"],
   });
 
-  const springConfig = { stiffness: 300, damping: 30, bounce: 100 };
+  const quality = getEffectQuality();
+  const springConfig =
+    quality === "high"
+      ? { stiffness: 300, damping: 30, bounce: 100 }
+      : quality === "medium"
+        ? { stiffness: 240, damping: 34, bounce: 72 }
+        : { stiffness: 200, damping: 40, bounce: 0 };
 
   const translateX = useSpring(
     useTransform(scrollYProgress, [0, 1], [0, 900]),
@@ -141,10 +149,11 @@ export const ProductCard = ({
         to={product.link}
         className="block h-full w-full group-hover/product:shadow-2xl"
       >
-        <img
+        <OptimizedImage
           src={product.thumbnail}
           height={600}
           width={600}
+          loading="lazy"
           className={
             fit === "cover"
               ? "absolute inset-0 h-full w-full object-cover object-left-top"

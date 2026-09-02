@@ -2,6 +2,7 @@ import { motion } from "framer-motion";
 import { useState, useEffect, type MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import AutoAnyLogo from "./AutoAnyLogo";
+import OptimizedImage from "./ui/OptimizedImage";
 import { SYSTEMS } from "../lib/systems";
 import { STACK_TOOLS } from "../lib/stack-tools";
 import { cn } from "../lib/cn";
@@ -109,7 +110,7 @@ export default function SiteNav({ active }: SiteNavProps) {
                     onClick={jumpResume}
                   >
                     <span className="nk-tools-plate">
-                      <img
+                      <OptimizedImage
                         src={tool.src}
                         alt=""
                         width={40}

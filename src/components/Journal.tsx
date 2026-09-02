@@ -166,7 +166,7 @@ export default function Journal() {
     <section
       ref={sectionRef}
       id="journal"
-      className="section-veil surface-dark relative z-10 mt-0 bg-black py-16 md:py-28"
+      className="section-veil surface-dark relative z-10 mt-0 bg-black py-16 [content-visibility:visible] md:py-28"
     >
       <div className="relative z-[1] mx-auto max-w-[1200px] px-6 md:px-10 lg:px-16">
         <SectionHeader

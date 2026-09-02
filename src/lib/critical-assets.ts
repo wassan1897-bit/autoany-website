@@ -1,4 +1,6 @@
 import { STACK_TOOLS } from "./stack-tools";
+import { allowSpline } from "./performance";
+import { bestRasterSrc } from "./picture";
 
 export const SPLINE_SCENE_URL =
   "https://prod.spline.design/V8ffAat3AjccN4Cj/scene.splinecode";
@@ -37,14 +39,6 @@ export const LOADER_MIN_MS = 1800;
 export const LOADER_MAX_MS = 5000;
 
 type ProgressListener = (progress: number) => void;
-
-function allowSpline() {
-  const connection = (
-    navigator as Navigator & { connection?: { saveData?: boolean } }
-  ).connection;
-  if (connection?.saveData) return false;
-  return true;
-}
 
 function preloadImage(src: string, signal: AbortSignal): Promise<void> {
   return new Promise((resolve) => {
@@ -116,7 +110,7 @@ export function createAssetReadiness(): AssetReadiness {
   }
 
   async function preloadImages(signal: AbortSignal) {
-    const unique = [...new Set(CRITICAL_IMAGES)];
+    const unique = [...new Set(CRITICAL_IMAGES.map((src) => bestRasterSrc(src)))];
     await Promise.all(unique.map((src) => preloadImage(src, signal)));
     if (signal.aborted) return;
     imagesDone = true;

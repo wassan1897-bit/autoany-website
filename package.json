@@ -7,7 +7,10 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "lint": "oxlint",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "audit:loading": "node scripts/loading-audit.mjs",
+    "audit:perf": "node scripts/performance-audit.mjs",
+    "optimize-images": "node scripts/convert-png-to-webp.mjs"
   },
   "dependencies": {
     "@gsap/react": "^2.1.2",

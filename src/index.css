@@ -990,3 +990,17 @@ body {
   backdrop-filter: none;
 }
 
+/* Below-fold sections: skip layout/paint until near viewport. */
+.perf-section {
+  content-visibility: auto;
+  contain-intrinsic-size: auto 720px;
+}
+
+[data-effect-quality="low"] .after\:animate-aurora::after {
+  animation: none !important;
+}
+
+[data-effect-quality="medium"] .after\:animate-aurora::after {
+  animation-duration: 24s !important;
+}
+

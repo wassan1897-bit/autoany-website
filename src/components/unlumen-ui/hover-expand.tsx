@@ -3,6 +3,7 @@ import { motion } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 
 import { cn } from "../../lib/cn";
+import { bestRasterSrc } from "../../lib/picture";
 
 export type HoverExpandItem = {
   label: string;
@@ -75,16 +76,21 @@ export function HoverExpand({
 }: HoverExpandProps) {
   const navigate = useNavigate();
   const [hoveredIndex, setHoveredIndex] = React.useState<number | null>(null);
-  const [loaded, setLoaded] = React.useState<Record<number, true>>({});
   const canFineHover = React.useSyncExternalStore(
     subscribeFinePointer,
     getFinePointer,
     () => false,
   );
 
+  React.useEffect(() => {
+    items.forEach((item) => {
+      const img = new Image();
+      img.src = bestRasterSrc(item.image);
+    });
+  }, [items]);
+
   const openRow = (index: number) => {
     setHoveredIndex(index);
-    setLoaded((prev) => (prev[index] ? prev : { ...prev, [index]: true }));
   };
 
   const closeRow = () => setHoveredIndex(null);
@@ -128,6 +134,10 @@ export function HoverExpand({
               }}
               onHoverStart={() => canFineHover && openRow(i)}
               onHoverEnd={() => canFineHover && closeRow()}
+              onPointerEnter={() => {
+                const img = new Image();
+                img.src = bestRasterSrc(item.image);
+              }}
               onFocus={() => openRow(i)}
               onBlur={() => canFineHover && closeRow()}
               onClick={() => {
@@ -184,17 +194,17 @@ export function HoverExpand({
                   y: IMAGE_SPRING,
                 }}
               >
-                {loaded[i] ? (
                 <motion.img
-                  src={item.image}
+                  src={bestRasterSrc(item.image)}
                   alt={item.imageAlt ?? ""}
                   className={cn(
                     "h-full w-full",
                     containHud ? "object-contain" : "object-cover",
                   )}
                   style={{ objectPosition: item.objectPosition ?? "50% 50%" }}
-                  loading="lazy"
+                  loading={isHovered ? "eager" : "lazy"}
                   decoding="async"
+                  fetchPriority={isHovered ? "high" : "auto"}
                   initial={false}
                   animate={{
                     scale: containHud || hideChrome ? 1 : isHovered ? 1.04 : 1,
@@ -204,7 +214,6 @@ export function HoverExpand({
                     ease: containHud || hideChrome ? REVEAL_EASE : "linear",
                   }}
                 />
-                ) : null}
                 <motion.div
                   className={cn(
                     "absolute inset-0",

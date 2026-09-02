@@ -18,18 +18,25 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Geist:wght@300;400;500&family=Instrument+Serif:ital@0;1&family=Inter:wght@300;400;500;600;700&family=Inter+Tight:wght@600;700&display=swap"
+      rel="preload"
+      as="style"
+      href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap"
+      onload="this.onload=null;this.rel='stylesheet'"
+    />
+    <noscript>
+      <link
+        rel="stylesheet"
+        href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Inter:wght@400;500;600;700&display=swap"
+      />
+    </noscript>
+    <link
       rel="stylesheet"
+      media="print"
+      href="https://fonts.googleapis.com/css2?family=Caveat:wght@500;600;700&family=Geist:wght@300;400;500&family=Inter+Tight:wght@600;700&display=swap"
+      onload="this.media='all'"
     />
   </head>
   <body>
-    <!--
-      THESIS: A screening-room portfolio — the picture leads; chrome recedes to a floating pill.
-      OWN-WORLD: Near-black HSL void, steel wash #89AACC→#4E85BF, Inter UI + Instrument Serif italic display.
-      STORY: Watch the work, then reach out.
-      FIRST VIEWPORT: HLS full-bleed, name at display scale, pill nav top-center, See Works / Reach out.
-      FORM: User-pinned recreation brief. FINISH: unreviewed and undocumented is unfinished; this build ends with the finish review, the verdict, and DESIGN.md
-    -->
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
   </body>

@@ -13,9 +13,27 @@ export default defineConfig({
       "@": path.resolve(root, "./src"),
     },
   },
+  build: {
+    chunkSizeWarningLimit: 1200,
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (id.includes("@splinetool")) return "spline";
+          if (id.includes("node_modules/gsap")) return "gsap";
+          if (id.includes("node_modules/lenis")) return "lenis";
+          if (
+            id.includes("node_modules/framer-motion") ||
+            id.includes("node_modules/motion/")
+          ) {
+            return "motion";
+          }
+        },
+      },
+    },
+  },
   server: {
     watch: {
-      ignored: ["**/previews/**"],
+      ignored: ["**/previews/**", "**/test-screenshots/**"],
     },
   },
 });

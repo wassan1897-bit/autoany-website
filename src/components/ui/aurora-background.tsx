@@ -1,5 +1,6 @@
 import type { ReactNode } from "react";
 import { cn } from "../../lib/cn";
+import { allowAuroraMotion } from "../../lib/performance";
 
 interface AuroraBackgroundProps extends React.HTMLProps<HTMLDivElement> {
   children?: ReactNode;
@@ -12,6 +13,8 @@ export const AuroraBackground = ({
   showRadialGradient = true,
   ...props
 }: AuroraBackgroundProps) => {
+  const motionOn = allowAuroraMotion();
+
   return (
     <main>
       <div
@@ -34,7 +37,8 @@ export const AuroraBackground = ({
             filter blur-[10px] invert-0
             after:content-[""] after:absolute after:inset-0 after:[background-image:var(--dark-gradient),var(--aurora)]
             after:[background-size:200%,_100%]
-            after:animate-aurora after:[background-attachment:fixed] after:mix-blend-difference
+            ${motionOn ? "after:animate-aurora after:[background-attachment:fixed]" : ""}
+            after:mix-blend-difference
             pointer-events-none
             absolute -inset-[10px] opacity-50 will-change-transform`,
               showRadialGradient &&
