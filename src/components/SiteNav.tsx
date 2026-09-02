@@ -2,8 +2,6 @@ import { motion } from "framer-motion";
 import { useState, useEffect, type MouseEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import AutoAnyLogo from "./AutoAnyLogo";
-import { AppleSwitch } from "./AppleSwitch";
-import { useTheme } from "../lib/theme";
 import { SYSTEMS } from "../lib/systems";
 import { STACK_TOOLS } from "../lib/stack-tools";
 import { cn } from "../lib/cn";
@@ -31,7 +29,6 @@ function jump(event: MouseEvent<HTMLAnchorElement>, id: string) {
 }
 
 export default function SiteNav({ active }: SiteNavProps) {
-  const { theme, setTheme } = useTheme();
   const navigate = useNavigate();
   const [navValue, setNavValue] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
@@ -184,16 +181,6 @@ export default function SiteNav({ active }: SiteNavProps) {
           </MotionNavigationMenuItem>
         </MotionNavigationMenuList>
       </MotionNavigationMenu>
-
-      <div className="nk-site-nav-switch">
-        <AppleSwitch
-          checked={theme === "dark"}
-          onCheckedChange={(on) => setTheme(on ? "dark" : "light")}
-          size="md"
-          tone="neutral"
-          aria-label="Dark mode"
-        />
-      </div>
     </motion.div>
   );
 }

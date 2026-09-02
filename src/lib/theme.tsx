@@ -21,16 +21,7 @@ type ThemeContextValue = {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 function readTheme(): Theme {
-  if (typeof document === "undefined") return "light";
-  const attr = document.documentElement.getAttribute("data-theme");
-  if (attr === "dark" || attr === "light") return attr;
-  try {
-    const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored === "dark" || stored === "light") return stored;
-  } catch {
-    /* ignore */
-  }
-  return "light";
+  return "dark";
 }
 
 function applyTheme(theme: Theme) {
@@ -52,12 +43,12 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     document.documentElement.classList.add("theme-ready");
   }, [theme]);
 
-  const setTheme = useCallback((next: Theme) => {
-    setThemeState(next);
+  const setTheme = useCallback((_next: Theme) => {
+    setThemeState("dark");
   }, []);
 
   const toggleTheme = useCallback(() => {
-    setThemeState((prev) => (prev === "dark" ? "light" : "dark"));
+    setThemeState("dark");
   }, []);
 
   const value = useMemo(
