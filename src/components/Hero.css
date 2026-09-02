@@ -49,12 +49,20 @@
   pointer-events: none;
 }
 
+/*
+ * Hidden until the capability probe passes. The scene renders while hidden so
+ * it can be measured; if the device cannot hold the frame rate it is unmounted
+ * without ever having been shown, leaving only the empty slot behind.
+ */
 .nk-spline:not(.is-ready) canvas {
   visibility: hidden;
+  opacity: 0;
 }
 
 .nk-spline canvas {
   display: block;
+  opacity: 1;
+  transition: opacity 420ms ease-out;
   width: 100% !important;
   height: 100% !important;
   min-height: 100%;

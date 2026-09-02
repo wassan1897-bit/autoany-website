@@ -11,8 +11,11 @@ const SystemCase = lazy(() => import("./pages/SystemCase"));
 export default function App() {
   const location = useLocation();
 
+  // "never" is deliberate: the site's motion is the product. Cost on weak
+  // hardware is scaled by the device tier in lib/performance.ts, which is now
+  // independent of the viewer's motion preference.
   return (
-    <MotionConfig reducedMotion="user">
+    <MotionConfig reducedMotion="never">
       <SiteCanvas />
       <AnimatePresence mode="wait">
         <Routes location={location} key={location.pathname}>

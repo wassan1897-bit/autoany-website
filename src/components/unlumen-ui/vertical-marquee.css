@@ -39,10 +39,20 @@
   }
 }
 
+/*
+ * Runs regardless of motion preference - product decision, this is the section
+ * doing the selling. It stays cheap because it is a compositor-only
+ * `translate3d` and because `#reviews.is-paused-live` (applied by
+ * `bindLiveSection` in ClientReviews.tsx) stops it the moment the section
+ * leaves the viewport.
+ */
 @media (prefers-reduced-motion: reduce) {
-  .nk-review-track,
+  .nk-review-track {
+    animation: nk-review-up 40s linear infinite;
+  }
+
   .nk-review-track--reverse {
-    animation: none;
+    animation-name: nk-review-down;
   }
 }
 

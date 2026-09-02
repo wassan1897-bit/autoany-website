@@ -37,10 +37,12 @@ function connectionInfo() {
 export function getEffectQuality(): EffectQuality {
   if (typeof window === "undefined") return "high";
 
-  if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) {
-    return "low";
-  }
-
+  // NOTE: `prefers-reduced-motion` is deliberately NOT consulted here.
+  // It is a statement about how much movement a person wants to see, not about
+  // how fast their machine is. Treating it as a device signal dropped a 16-core
+  // desktop to the "low" tier - Spline at 18fps and 0.58 pixel ratio - which
+  // read as a laggy hero. Motion preference is handled separately, by
+  // `prefersReducedMotion()` below, at the points where it actually belongs.
   const connection = connectionInfo();
   if (connection?.saveData) return "low";
 
@@ -55,6 +57,12 @@ export function getEffectQuality(): EffectQuality {
   }
 
   return "high";
+}
+
+/** The viewer's motion preference, kept separate from the device tier. */
+export function prefersReducedMotion(): boolean {
+  if (typeof window === "undefined") return false;
+  return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
 }
 
 /** Softer motion only — does not remove UI. */
@@ -98,15 +106,22 @@ export function splinePixelRatio(scrolledAway = false): number {
   }
 }
 
-/** Target Spline render cadence for the current device tier. */
+/**
+ * Target Spline render cadence for the current device tier.
+ *
+ * Desktop runs at display rate: the hero bot tracks the cursor, so anything
+ * below 60 reads as lag. This is affordable now only because the render loop
+ * parks completely once the hero scrolls out of view - the cost is bounded to
+ * the one screen where the bot is actually visible.
+ */
 export function splineMaxFps(quality: EffectQuality = getEffectQuality()): number {
   switch (quality) {
     case "low":
-      return 18;
-    case "medium":
       return 24;
+    case "medium":
+      return 30;
     default:
-      return 40;
+      return 60;
   }
 }
 

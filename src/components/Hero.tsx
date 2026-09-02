@@ -63,6 +63,53 @@ function paintSplineCanvas(spline: Application, _theme: Theme) {
   }
 }
 
+/**
+ * Apply the tier's pixel ratio to the Spline canvas.
+ *
+ * Two things were wrong here before:
+ *
+ * 1. `Application` does not expose `setPixelRatio` at all - it lives on the
+ *    internal renderer. The old call was `spline.setPixelRatio?.(ratio)`, which
+ *    is `undefined`, so the optional call silently did nothing.
+ * 2. Setting the ratio on the renderer is still not enough. Three.js only
+ *    rebuilds the drawing buffer inside `setSize`, so the canvas stays at
+ *    whatever size Spline gave it on load. Measured on a DPR-2 viewport: the
+ *    ratio field read back correctly while the buffer stayed at 3004px wide for
+ *    a 1592px canvas - 1.89x, roughly 4x the fragment work the tier intended.
+ *
+ * Calling `setSize(cssWidth, cssHeight, false)` after the ratio is what actually
+ * resizes the buffer. `false` leaves the canvas CSS alone, which Hero.css owns.
+ */
+type RendererHandle = {
+  setPixelRatio?: (ratio: number) => void;
+  setSize?: (width: number, height: number, updateStyle: boolean) => void;
+};
+
+function applySplinePixelRatio(spline: Application, ratio: number): boolean {
+  const app = spline as Application & RendererHandle & {
+    _renderer?: RendererHandle;
+    renderer?: RendererHandle;
+  };
+
+  for (const target of [app._renderer, app.renderer, app]) {
+    if (!target || typeof target.setPixelRatio !== "function") continue;
+    try {
+      target.setPixelRatio(ratio);
+      const canvas = spline.canvas;
+      if (canvas && typeof target.setSize === "function") {
+        const rect = canvas.getBoundingClientRect();
+        if (rect.width > 0 && rect.height > 0) {
+          target.setSize(Math.round(rect.width), Math.round(rect.height), false);
+        }
+      }
+      return true;
+    } catch {
+      /* try the next handle */
+    }
+  }
+  return false;
+}
+
 function syncSplinePlayback(spline: Application, hide: boolean) {
   if (hide) {
     if (!spline.isStopped) spline.stop();
@@ -122,6 +169,25 @@ function feedSplineCursor(
   );
 }
 
+/**
+ * Frame rate the device must actually sustain for the bot to stay.
+ *
+ * The tier system reads CPU cores, RAM, viewport and connection - none of which
+ * say anything about the GPU, which is the only thing that decides whether this
+ * scene is smooth. A budget laptop reporting 4 cores and 8GB lands on the top
+ * tier and then manages 3fps. So the scene is measured rather than predicted.
+ *
+ * 22 rather than 24 leaves a little slack on the tier whose target *is* 24.
+ */
+const MIN_SUSTAINED_FPS = 22;
+
+/**
+ * The hero entrance is a staggered framer-motion sequence whose last element
+ * starts at 1.05s and runs 0.8s. Mounting the WebGL scene before that lands
+ * would let shader compilation stall the one animation every visitor sees.
+ */
+const HERO_INTRO_SETTLE_MS = 1900;
+
 type HeroProps = {
   active: boolean;
 };
@@ -140,36 +206,50 @@ export default function Hero({ active }: HeroProps) {
   const [splineReady, setSplineReady] = useState(false);
   const [splineArmed, setSplineArmed] = useState(false);
   const [splineFailed, setSplineFailed] = useState(false);
+  /** Set when the measured frame rate says this device cannot drive the scene. */
+  const [splineUnderpowered, setSplineUnderpowered] = useState(false);
 
   /**
-   * Hold the WebGL runtime back until the page is painted and idle.
+   * Hold the WebGL runtime back until the intro has finished and the page is
+   * idle.
    *
-   * Parsing the scene and compiling its shaders is a single ~2s synchronous
-   * block; mounting it during startup meant that block landed on top of the
-   * loader, so the first thing a visitor got was a frozen tab.
+   * Parsing the scene and compiling its shaders is a single multi-second
+   * synchronous block; mounting it during startup meant that block landed on
+   * top of the loader, so the first thing a visitor got was a frozen tab.
+   *
+   * The network fetch is started immediately though - it costs no main thread,
+   * so it can overlap the intro for free. Only the expensive mount waits.
    */
   useEffect(() => {
     if (!canSpline || !active || splineArmed) return;
 
+    preloadSplineScene();
+
     let cancelled = false;
+    let idleId: number | null = null;
     const arm = () => {
-      if (cancelled) return;
-      preloadSplineScene();
-      setSplineArmed(true);
+      if (!cancelled) setSplineArmed(true);
     };
 
-    if (typeof requestIdleCallback !== "undefined") {
-      const id = requestIdleCallback(arm, { timeout: 1500 });
-      return () => {
-        cancelled = true;
-        cancelIdleCallback(id);
-      };
-    }
+    const schedule = () => {
+      if (cancelled) return;
+      idleId =
+        typeof requestIdleCallback !== "undefined"
+          ? requestIdleCallback(arm, { timeout: 1200 })
+          : window.setTimeout(arm, 200);
+    };
 
-    const id = window.setTimeout(arm, 400);
+    // Long enough for the staggered hero entrance to land before the scene
+    // starts competing for the main thread.
+    const settle = window.setTimeout(schedule, HERO_INTRO_SETTLE_MS);
+
     return () => {
       cancelled = true;
-      window.clearTimeout(id);
+      window.clearTimeout(settle);
+      if (idleId !== null) {
+        if (typeof cancelIdleCallback !== "undefined") cancelIdleCallback(idleId);
+        else window.clearTimeout(idleId);
+      }
     };
   }, [active, canSpline, splineArmed]);
 
@@ -210,13 +290,7 @@ export default function Hero({ active }: HeroProps) {
       const spline = splineRef.current;
       if (spline) {
         syncSplinePlayback(spline, hide || !activeRef.current || parked);
-        try {
-          (
-            spline as Application & { setPixelRatio?: (ratio: number) => void }
-          ).setPixelRatio?.(splinePixelRatio(parked || hide));
-        } catch {
-          /* ignore */
-        }
+        applySplinePixelRatio(spline, splinePixelRatio(parked || hide));
       }
     };
 
@@ -262,9 +336,15 @@ export default function Hero({ active }: HeroProps) {
         pointerRaf = 0;
         const live = splineRef.current;
         if (!live || heroCovered() || document.hidden) return;
-        const now = performance.now();
-        if (now - lastPointerFeed < pointerGapRef.current) return;
-        lastPointerFeed = now;
+        // Already once-per-frame here; the extra gap only applies on the
+        // reduced-cadence tiers, where the scene renders slower than the
+        // display anyway.
+        const gap = pointerGapRef.current;
+        if (gap > 0) {
+          const now = performance.now();
+          if (now - lastPointerFeed < gap) return;
+          lastPointerFeed = now;
+        }
         governorRef.current?.touch();
         feedSplineCursor(live, pointerX, pointerY);
       });
@@ -291,6 +371,26 @@ export default function Hero({ active }: HeroProps) {
     if (spline) paintSplineCanvas(spline, theme);
   }, [theme]);
 
+  /**
+   * Tear the scene down when the probe says the device cannot drive it. What is
+   * left behind is the empty `.nk-spline-slot` - background only, no poster and
+   * no placeholder card.
+   */
+  useEffect(() => {
+    if (!splineUnderpowered) return;
+    governorRef.current?.destroy();
+    governorRef.current = null;
+    const spline = splineRef.current;
+    splineRef.current = null;
+    if (spline) {
+      try {
+        if (!spline.isStopped) spline.stop();
+      } catch {
+        /* the runtime is going away with the canvas anyway */
+      }
+    }
+  }, [splineUnderpowered]);
+
   const onSplineLoad = (spline: Application) => {
     splineRef.current = spline;
     governorRef.current?.destroy();
@@ -301,10 +401,23 @@ export default function Hero({ active }: HeroProps) {
         if (shouldParkSpline()) return false;
         return true;
       },
-      { idleStopMs: 0 },
+      {
+        idleStopMs: 0,
+        /**
+         * The canvas stays hidden (no `is-ready` class) until this fires, so a
+         * device that fails the check never shows the bot at all - no flash of
+         * a scene that then disappears, and no placeholder in its place.
+         */
+        onCapabilityMeasured: (achievedFps) => {
+          if (achievedFps >= MIN_SUSTAINED_FPS) {
+            setSplineReady(true);
+            return;
+          }
+          setSplineUnderpowered(true);
+        },
+      },
     );
     governorRef.current.touch();
-    setSplineReady(true);
     const controls = spline.controls;
     if (controls) {
       controls.enableZoom = false;
@@ -322,13 +435,7 @@ export default function Hero({ active }: HeroProps) {
       spline,
       !activeRef.current || heroCovered() || document.hidden,
     );
-    try {
-      (
-        spline as Application & { setPixelRatio?: (ratio: number) => void }
-      ).setPixelRatio?.(splinePixelRatio(shouldParkSpline()));
-    } catch {
-      /* ignore */
-    }
+    applySplinePixelRatio(spline, splinePixelRatio(shouldParkSpline()));
   };
 
   return (
@@ -346,7 +453,7 @@ export default function Hero({ active }: HeroProps) {
       >
         <div className={`nk-spline${splineReady ? " is-ready" : ""}`}>
           <div className="nk-spline-slot" aria-hidden />
-          {canSpline && splineArmed && !splineFailed && (
+          {canSpline && splineArmed && !splineFailed && !splineUnderpowered && (
             <ErrorBoundary onError={() => setSplineFailed(true)}>
               <Suspense fallback={null}>
                 <Spline
